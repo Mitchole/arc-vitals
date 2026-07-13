@@ -73,4 +73,24 @@ public class BarStateTest {
         assertFalse(BarState.warn(low, false));
         assertFalse(BarState.warn(high, true));
     }
+
+    @Test
+    public void previewFractionAddsRestore() {
+        assertEquals(0.70, BarState.previewFraction(50, 100, 20), D);
+    }
+
+    @Test
+    public void previewFractionNoRestoreIsCurrent() {
+        assertEquals(0.50, BarState.previewFraction(50, 100, 0), D);
+    }
+
+    @Test
+    public void previewFractionClampsOverheal() {
+        assertEquals(1.0, BarState.previewFraction(90, 100, 20), D);
+    }
+
+    @Test
+    public void previewFractionSafeWhenMaxZero() {
+        assertEquals(0.0, BarState.previewFraction(50, 0, 20), D);
+    }
 }

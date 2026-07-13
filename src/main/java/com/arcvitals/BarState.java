@@ -56,4 +56,15 @@ final class BarState {
     static boolean warn(BarState self, boolean warnColorEnabled) {
         return warnColorEnabled && self.low;
     }
+
+    static double previewFraction(int current, int max, int restore) {
+        if (max <= 0) {
+            return 0.0;
+        }
+        double f = (double) (current + restore) / max;
+        if (f < 0.0) {
+            return 0.0;
+        }
+        return f > 1.0 ? 1.0 : f;
+    }
 }
