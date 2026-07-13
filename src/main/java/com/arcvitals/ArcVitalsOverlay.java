@@ -97,7 +97,7 @@ public class ArcVitalsOverlay extends Overlay {
     }
 
     private int restoreFor(Skill skill) {
-        MenuEntry[] menu = client.getMenuEntries();
+        MenuEntry[] menu = client.getMenu().getMenuEntries();
         if (menu.length == 0) {
             return 0;
         }
