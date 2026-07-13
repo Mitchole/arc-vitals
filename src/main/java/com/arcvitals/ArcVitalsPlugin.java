@@ -11,7 +11,9 @@ import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.itemstats.ItemStatPlugin;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -19,6 +21,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
     description = "An IceHUD inspired Vitals HUD",
     tags = {"hud", "health", "hitpoints", "prayer", "overlay", "bars", "vitals"}
 )
+@PluginDependency(ItemStatPlugin.class)
 public class ArcVitalsPlugin extends Plugin {
 
     @Inject
