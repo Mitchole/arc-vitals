@@ -59,8 +59,11 @@ public class ArcVitalsOverlay extends Overlay {
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(alpha)));
 
+        Color outline = config.showOutline() ? config.outlineColor() : null;
         ArcBar.draw(g, cx, cy, config.size(), config.thickness(), config.gap(), config.curve(),
-            leftSide, config.fillDirection(), self.fraction, fill, config.trackColor());
+            leftSide, config.fillDirection(), self.fraction, fill, config.trackColor(),
+            config.flatEnds(), outline, config.outlineWidth(),
+            0.0, null);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
         if (!txt.isEmpty()) {

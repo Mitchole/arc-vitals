@@ -7,21 +7,37 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class ArcBarTest {
+    private static final Color TRACK = new Color(0, 0, 0, 130);
+    private static final Color OUTLINE = new Color(0, 0, 0, 180);
+
     @Test
-    public void drawPaintsPixelsAndDoesNotThrow() {
+    public void flatEndsWithOutlineAndPreviewPaintsPixels() {
         BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
-        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, true, FillDirection.BOTTOM_UP, 0.5, Color.GREEN, new Color(0, 0, 0, 130));
-        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, false, FillDirection.BOTTOM_UP, 0.5, Color.CYAN, new Color(0, 0, 0, 130));
+        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, true, FillDirection.BOTTOM_UP, 0.5,
+            Color.GREEN, TRACK, true, OUTLINE, 1, 0.8, new Color(200, 255, 200, 120));
+        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, false, FillDirection.BOTTOM_UP, 0.5,
+            Color.CYAN, TRACK, true, OUTLINE, 1, 0.8, new Color(200, 255, 255, 120));
         g.dispose();
-        assertTrue("expected some non-transparent pixels", hasVisiblePixel(img));
+        assertTrue(hasVisiblePixel(img));
     }
 
     @Test
-    public void emptyBarStillDrawsTrackWithoutThrowing() {
+    public void roundEndsNoOutlineNoPreviewStillPaints() {
         BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
-        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, true, FillDirection.BOTTOM_UP, 0.0, Color.GREEN, new Color(0, 0, 0, 130));
+        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, true, FillDirection.BOTTOM_UP, 0.5,
+            Color.GREEN, TRACK, false, null, 0, 0.0, null);
+        g.dispose();
+        assertTrue(hasVisiblePixel(img));
+    }
+
+    @Test
+    public void fullBarWithFlatEndsDoesNotThrow() {
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        ArcBar.draw(g, 200, 200, 140, 12, 70, 110, true, FillDirection.BOTTOM_UP, 1.0,
+            Color.GREEN, TRACK, true, OUTLINE, 1, 0.0, null);
         g.dispose();
         assertTrue(hasVisiblePixel(img));
     }
