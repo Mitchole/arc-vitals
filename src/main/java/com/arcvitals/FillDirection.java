@@ -1,6 +1,6 @@
 package com.arcvitals;
 
-enum FillDirection {
+public enum FillDirection {
     BOTTOM_UP("Bottom up"),
     TOP_DOWN("Top down");
 

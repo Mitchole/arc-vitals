@@ -1,6 +1,6 @@
 package com.arcvitals;
 
-enum ValueDisplay {
+public enum ValueDisplay {
     OFF("Off"),
     CURRENT_MAX("Current / Max"),
     PERCENT("Percent"),

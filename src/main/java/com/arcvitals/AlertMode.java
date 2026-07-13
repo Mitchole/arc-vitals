@@ -1,6 +1,6 @@
 package com.arcvitals;
 
-enum AlertMode {
+public enum AlertMode {
     PER_BAR("Per bar"),
     WHOLE_HUD("Whole HUD"),
     OFF("Off");
