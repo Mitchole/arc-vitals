@@ -46,11 +46,24 @@ final class ArcBar {
         }
         int fillH = (int) Math.round(size * frac);
         if (fillH > 0) {
-            int topY = (dir == FillDirection.BOTTOM_UP) ? (cy + size / 2 - fillH) : (cy - size / 2);
+            // The round stroke caps bulge ~thickness/2 past the arc endpoints, so pad the
+            // fill band to cover them: always include the anchored-end cap, and add the
+            // far-end cap only when the bar is full (a partial bar keeps a flat liquid level).
+            boolean full = frac >= 1.0;
+            int cap = thickness;
+            int bandTop;
+            int bandBottom;
+            if (dir == FillDirection.BOTTOM_UP) {
+                bandTop = (cy + size / 2 - fillH) - (full ? cap : 0);
+                bandBottom = cy + size / 2 + cap;
+            } else {
+                bandTop = cy - size / 2 - cap;
+                bandBottom = (cy - size / 2 + fillH) + (full ? cap : 0);
+            }
             int clipX = (int) Math.floor(boundX - thickness);
             int clipW = (int) Math.ceil(diameter + thickness * 2);
             Shape oldClip = g.getClip();
-            g.clipRect(clipX, topY, clipW, fillH);
+            g.clipRect(clipX, bandTop, clipW, bandBottom - bandTop);
             g.setColor(fill);
             g.draw(arc);
             g.setClip(oldClip);
