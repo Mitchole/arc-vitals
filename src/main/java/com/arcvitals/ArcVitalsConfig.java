@@ -33,6 +33,13 @@ public interface ArcVitalsConfig extends Config {
     )
     String alertsSection = "alerts";
 
+    @ConfigSection(
+        name = "Visibility",
+        description = "When the HUD is shown",
+        position = 3
+    )
+    String visibilitySection = "visibility";
+
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
     @Range(min = -500, max = 500)
     @Units(Units.PIXELS)
@@ -107,6 +114,34 @@ public interface ArcVitalsConfig extends Config {
         return ValueDisplay.CURRENT_MAX;
     }
 
+    @ConfigItem(keyName = "showRestorePreview", name = "Restore preview", description = "Show how much hovered food or potions would restore, as a lighter segment.", section = appearanceSection, position = 4)
+    default boolean showRestorePreview() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "flatEnds", name = "Flat bar ends", description = "Cut the bar ends flat (IceHUD style) instead of rounded.", section = appearanceSection, position = 5)
+    default boolean flatEnds() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "showOutline", name = "Bar outline", description = "Draw a border around each bar.", section = appearanceSection, position = 6)
+    default boolean showOutline() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "outlineWidth", name = "Outline width", description = "Thickness of the bar outline.", section = appearanceSection, position = 7)
+    @Range(min = 1, max = 5)
+    @Units(Units.PIXELS)
+    default int outlineWidth() {
+        return 1;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 8)
+    default Color outlineColor() {
+        return new Color(0, 0, 0, 180);
+    }
+
     @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = alertsSection, position = 0)
     @Range(min = 0, max = 100)
     @Units(Units.PERCENT)
@@ -149,5 +184,17 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "warnColor", name = "Warning colour value", description = "Colour used while a bar is alerting.", section = alertsSection, position = 6)
     default Color warnColor() {
         return new Color(255, 60, 60);
+    }
+
+    @ConfigItem(keyName = "hideOutOfCombat", name = "Hide out of combat", description = "Hide the HUD when you have been out of combat for a while.", section = visibilitySection, position = 0)
+    default boolean hideOutOfCombat() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "hideOutOfCombatDelay", name = "Hide after", description = "Seconds out of combat before the HUD hides (needs Hide out of combat).", section = visibilitySection, position = 1)
+    @Range(min = 0, max = 120)
+    @Units(Units.SECONDS)
+    default int hideOutOfCombatDelay() {
+        return 5;
     }
 }
