@@ -126,8 +126,8 @@ public class ArcVitalsOverlay extends Overlay {
         Color outline = config.showOutline() ? config.outlineColor() : null;
         long cacheKey = (long) index * 2 + (leftSide ? 1 : 0);
         Shape capsule = capsuleCache.computeIfAbsent(cacheKey,
-            k -> ArcBar.capsule(cx, cy, config.size(), config.thickness(), gap, config.curve(),
-                leftSide, config.flatEnds()));
+            k -> ArcBar.capsule(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+                config.curve(), index, leftSide, config.flatEnds()));
         ArcBar.draw(g, capsule, cy, config.size(), config.thickness(),
             config.fillDirection(), self.fraction, fill, config.trackColor(),
             outline, config.outlineWidth(), previewFraction, previewColor);

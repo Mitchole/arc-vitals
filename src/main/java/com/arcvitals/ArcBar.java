@@ -14,23 +14,36 @@ final class ArcBar {
     private ArcBar() {
     }
 
-    // Builds the closed capsule shape for a bar. Positioned absolutely at (cx, cy);
-    // callers that cache the result must invalidate when cx/cy or any layout param changes.
-    static Shape capsule(int cx, int cy, int size, int thickness, int gap, int curveDegrees,
-                         boolean leftSide, boolean flatEnds) {
+    // Builds the closed capsule shape for a bar nested at the given index on its side.
+    // Nested bars are concentric: they share the innermost bar's circle centre and grow in
+    // radius by (thickness + spacing) per index, so the gap between them is uniform along the
+    // whole arc (no overlap at the ends). Each bar's sweep is chosen so every bar keeps the
+    // same height. At index 0 this reduces exactly to the single-bar geometry.
+    // Positioned absolutely at (cx, cy); callers that cache the result must invalidate when
+    // cx/cy or any layout param changes.
+    static Shape capsule(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                         int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
         double half = Math.toRadians(curveDegrees) / 2.0;
         double sinHalf = Math.sin(half);
         if (sinHalf < 1e-4) {
             sinHalf = 1e-4;
         }
-        double radius = (size / 2.0) / sinHalf;
-        double circleCenterX = leftSide ? (cx - gap + radius) : (cx + gap - radius);
+        // Innermost radius and the shared circle centre both come from the base gap + curve.
+        double baseRadius = (size / 2.0) / sinHalf;
+        double circleCenterX = leftSide ? (cx - baseGap + baseRadius) : (cx + baseGap - baseRadius);
+        double radius = baseRadius + index * (double) (thickness + spacing);
+
+        // Hold the height constant: narrow the sweep as the radius grows so the arc still spans
+        // `size` vertically. clamp guards a radius smaller than half the height (never at index 0).
+        double sinSweepHalf = Math.min(1.0, (size / 2.0) / radius);
+        double sweepDegrees = Math.toDegrees(Math.asin(sinSweepHalf) * 2.0);
+
         double boundX = circleCenterX - radius;
         double boundY = cy - radius;
         double diameter = radius * 2.0;
         double centreAngle = leftSide ? 180.0 : 0.0;
-        double startAngle = centreAngle - (curveDegrees / 2.0);
-        Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, startAngle, curveDegrees, Arc2D.OPEN);
+        double startAngle = centreAngle - (sweepDegrees / 2.0);
+        Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, startAngle, sweepDegrees, Arc2D.OPEN);
 
         int cap = flatEnds ? BasicStroke.CAP_BUTT : BasicStroke.CAP_ROUND;
         return new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
