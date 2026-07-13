@@ -71,7 +71,7 @@ public class ArcVitalsOverlay extends Overlay {
 
     private void drawVital(Graphics2D g, BarState self, BarState other, boolean leftSide,
                            Color baseColor, int current, int max, int restore, int cx, int cy) {
-        float alpha = BarState.opacity(self, other, config.alertMode(), config.baseOpacity(), config.alertOpacity());
+        float alpha = BarState.opacity(self.low, self.low || other.low, config.alertMode(), config.baseOpacity(), config.alertOpacity());
         Color fill = BarState.warn(self, config.warnColorEnabled()) ? config.warnColor() : baseColor;
 
         Composite oldComposite = g.getComposite();

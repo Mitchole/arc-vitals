@@ -37,32 +37,26 @@ public class BarStateTest {
     }
 
     @Test
-    public void opacityPerBarUsesOnlySelf() {
-        BarState low = BarState.of(10, 100, 30);
-        BarState high = BarState.of(90, 100, 30);
-        assertEquals(1.0f, BarState.opacity(low, high, AlertMode.PER_BAR, 60, 100), 1e-4f);
-        assertEquals(0.6f, BarState.opacity(high, low, AlertMode.PER_BAR, 60, 100), 1e-4f);
+    public void opacityPerBarUsesSelf() {
+        assertEquals(1.0f, BarState.opacity(true, false, AlertMode.PER_BAR, 60, 100), 1e-4f);
+        assertEquals(0.6f, BarState.opacity(false, true, AlertMode.PER_BAR, 60, 100), 1e-4f);
     }
 
     @Test
-    public void opacityWholeHudUsesEither() {
-        BarState low = BarState.of(10, 100, 30);
-        BarState high = BarState.of(90, 100, 30);
-        assertEquals(1.0f, BarState.opacity(high, low, AlertMode.WHOLE_HUD, 60, 100), 1e-4f);
-        assertEquals(0.6f, BarState.opacity(high, high, AlertMode.WHOLE_HUD, 60, 100), 1e-4f);
+    public void opacityWholeHudUsesAnyLow() {
+        assertEquals(1.0f, BarState.opacity(false, true, AlertMode.WHOLE_HUD, 60, 100), 1e-4f);
+        assertEquals(0.6f, BarState.opacity(false, false, AlertMode.WHOLE_HUD, 60, 100), 1e-4f);
     }
 
     @Test
     public void opacityOffAlwaysBase() {
-        BarState low = BarState.of(10, 100, 30);
-        assertEquals(0.6f, BarState.opacity(low, low, AlertMode.OFF, 60, 100), 1e-4f);
+        assertEquals(0.6f, BarState.opacity(true, true, AlertMode.OFF, 60, 100), 1e-4f);
     }
 
     @Test
     public void opacityClampsPercent() {
-        BarState high = BarState.of(90, 100, 30);
-        assertEquals(1.0f, BarState.opacity(high, high, AlertMode.OFF, 150, 100), 1e-4f);
-        assertEquals(0.0f, BarState.opacity(high, high, AlertMode.OFF, -20, 100), 1e-4f);
+        assertEquals(1.0f, BarState.opacity(false, false, AlertMode.OFF, 150, 100), 1e-4f);
+        assertEquals(0.0f, BarState.opacity(false, false, AlertMode.OFF, -20, 100), 1e-4f);
     }
 
     @Test

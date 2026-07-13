@@ -30,14 +30,14 @@ final class BarState {
         return new BarState(current, max, frac, low);
     }
 
-    static float opacity(BarState self, BarState other, AlertMode mode, int basePct, int alertPct) {
+    static float opacity(boolean selfLow, boolean anyLow, AlertMode mode, int basePct, int alertPct) {
         boolean alert;
         switch (mode) {
             case PER_BAR:
-                alert = self.low;
+                alert = selfLow;
                 break;
             case WHOLE_HUD:
-                alert = self.low || other.low;
+                alert = anyLow;
                 break;
             case OFF:
             default:
