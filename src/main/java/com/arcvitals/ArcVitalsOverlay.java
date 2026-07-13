@@ -31,6 +31,9 @@ public class ArcVitalsOverlay extends Overlay {
     private final ItemStatChangesService itemStatService;
     private final CombatTracker combatTracker;
 
+    private static final Vital[] VITALS = Vital.values();
+    private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
+
     private final Map<Long, Shape> capsuleCache = new HashMap<>();
     private int cacheCx = Integer.MIN_VALUE;
     private int cacheCy;
@@ -62,9 +65,9 @@ public class ArcVitalsOverlay extends Overlay {
             return null;
         }
 
-        EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
+        states.clear();
         boolean anyLow = false;
-        for (Vital v : Vital.values()) {
+        for (Vital v : VITALS) {
             if (!v.enabled(config)) {
                 continue;
             }
@@ -92,7 +95,7 @@ public class ArcVitalsOverlay extends Overlay {
     private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
                           boolean anyLow, int cx, int cy, StatsChanges hovered) {
         int index = 0;
-        for (Vital v : Vital.values()) {
+        for (Vital v : VITALS) {
             BarState s = states.get(v);
             if (s == null || v.side(config) != side) {
                 continue;
