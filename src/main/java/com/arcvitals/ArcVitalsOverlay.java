@@ -82,13 +82,13 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
-            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy);
+            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index);
             index++;
         }
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,
-                           int gap, int cx, int cy) {
+                           int gap, int cx, int cy, int index) {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
@@ -116,7 +116,7 @@ public class ArcVitalsOverlay extends Overlay {
             FontMetrics fm = g.getFontMetrics();
             int tipX = leftSide ? (cx - gap) : (cx + gap);
             int tx = tipX - fm.stringWidth(txt) / 2;
-            int ty = cy + config.size() / 2 + fm.getHeight();
+            int ty = BarLayout.labelBaselineY(cy, config.size(), fm.getHeight(), index);
             g.setColor(Color.BLACK);
             g.drawString(txt, tx + 1, ty + 1);
             g.setColor(fill);
