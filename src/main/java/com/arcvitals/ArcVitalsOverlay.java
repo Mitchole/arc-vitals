@@ -52,10 +52,10 @@ public class ArcVitalsOverlay extends Overlay {
         EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
         boolean anyLow = false;
         for (Vital v : Vital.values()) {
-            if (!enabledFor(v)) {
+            if (!v.enabled(config)) {
                 continue;
             }
-            BarState s = BarState.of(v.current(client), v.max(client), thresholdFor(v));
+            BarState s = BarState.of(v.current(client), v.max(client), v.threshold(config));
             states.put(v, s);
             if (s.low) {
                 anyLow = true;
@@ -78,7 +78,7 @@ public class ArcVitalsOverlay extends Overlay {
         int index = 0;
         for (Vital v : Vital.values()) {
             BarState s = states.get(v);
-            if (s == null || sideFor(v) != side) {
+            if (s == null || v.side(config) != side) {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
@@ -92,7 +92,7 @@ public class ArcVitalsOverlay extends Overlay {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
-        Color base = colorFor(v);
+        Color base = v.color(config);
         Color fill = BarState.warn(self, config.warnColorEnabled()) ? config.warnColor() : base;
 
         int restore = (config.showRestorePreview() && v.restoreStatName() != null)
@@ -124,66 +124,6 @@ public class ArcVitalsOverlay extends Overlay {
         }
 
         g.setComposite(oldComposite);
-    }
-
-    private boolean enabledFor(Vital v) {
-        switch (v) {
-            case HITPOINTS:
-                return config.hpEnabled();
-            case PRAYER:
-                return config.prayerEnabled();
-            case SPECIAL_ATTACK:
-                return config.specEnabled();
-            case RUN_ENERGY:
-                return config.runEnabled();
-            default:
-                return false;
-        }
-    }
-
-    private Color colorFor(Vital v) {
-        switch (v) {
-            case HITPOINTS:
-                return config.hpColor();
-            case PRAYER:
-                return config.prayerColor();
-            case SPECIAL_ATTACK:
-                return config.specColor();
-            case RUN_ENERGY:
-                return config.runColor();
-            default:
-                return Color.WHITE;
-        }
-    }
-
-    private int thresholdFor(Vital v) {
-        switch (v) {
-            case HITPOINTS:
-                return config.hpThreshold();
-            case PRAYER:
-                return config.prayerThreshold();
-            case SPECIAL_ATTACK:
-                return config.specThreshold();
-            case RUN_ENERGY:
-                return config.runThreshold();
-            default:
-                return 0;
-        }
-    }
-
-    private Side sideFor(Vital v) {
-        switch (v) {
-            case HITPOINTS:
-                return config.hpSide();
-            case PRAYER:
-                return config.prayerSide();
-            case SPECIAL_ATTACK:
-                return config.specSide();
-            case RUN_ENERGY:
-                return config.runSide();
-            default:
-                return Side.LEFT;
-        }
     }
 
     private int restoreFor(String statName) {

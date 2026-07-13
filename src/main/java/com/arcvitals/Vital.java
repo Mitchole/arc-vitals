@@ -1,54 +1,85 @@
 package com.arcvitals;
 
+import java.awt.Color;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.VarPlayerID;
 
 enum Vital {
-    HITPOINTS("Hitpoints", "Hitpoints"),
-    PRAYER("Prayer", "Prayer"),
-    SPECIAL_ATTACK("Special attack", null),
-    RUN_ENERGY("Run energy", "Run Energy");
+    HITPOINTS(
+        c -> c.getBoostedSkillLevel(Skill.HITPOINTS),
+        c -> c.getRealSkillLevel(Skill.HITPOINTS),
+        ArcVitalsConfig::hpEnabled, ArcVitalsConfig::hpColor,
+        ArcVitalsConfig::hpThreshold, ArcVitalsConfig::hpSide,
+        "Hitpoints"),
+    PRAYER(
+        c -> c.getBoostedSkillLevel(Skill.PRAYER),
+        c -> c.getRealSkillLevel(Skill.PRAYER),
+        ArcVitalsConfig::prayerEnabled, ArcVitalsConfig::prayerColor,
+        ArcVitalsConfig::prayerThreshold, ArcVitalsConfig::prayerSide,
+        "Prayer"),
+    SPECIAL_ATTACK(
+        c -> c.getVarpValue(VarPlayerID.SA_ENERGY) / 10,
+        c -> 100,
+        ArcVitalsConfig::specEnabled, ArcVitalsConfig::specColor,
+        ArcVitalsConfig::specThreshold, ArcVitalsConfig::specSide,
+        null),
+    RUN_ENERGY(
+        c -> c.getEnergy() / 100,
+        c -> 100,
+        ArcVitalsConfig::runEnabled, ArcVitalsConfig::runColor,
+        ArcVitalsConfig::runThreshold, ArcVitalsConfig::runSide,
+        "Run Energy");
 
-    private final String label;
+    private final ToIntFunction<Client> current;
+    private final ToIntFunction<Client> max;
+    private final Predicate<ArcVitalsConfig> enabled;
+    private final Function<ArcVitalsConfig, Color> color;
+    private final ToIntFunction<ArcVitalsConfig> threshold;
+    private final Function<ArcVitalsConfig, Side> side;
     private final String restoreStatName;
 
-    Vital(String label, String restoreStatName) {
-        this.label = label;
+    Vital(ToIntFunction<Client> current, ToIntFunction<Client> max,
+          Predicate<ArcVitalsConfig> enabled, Function<ArcVitalsConfig, Color> color,
+          ToIntFunction<ArcVitalsConfig> threshold, Function<ArcVitalsConfig, Side> side,
+          String restoreStatName) {
+        this.current = current;
+        this.max = max;
+        this.enabled = enabled;
+        this.color = color;
+        this.threshold = threshold;
+        this.side = side;
         this.restoreStatName = restoreStatName;
     }
 
-    String label() {
-        return label;
+    int current(Client client) {
+        return current.applyAsInt(client);
+    }
+
+    int max(Client client) {
+        return max.applyAsInt(client);
+    }
+
+    boolean enabled(ArcVitalsConfig config) {
+        return enabled.test(config);
+    }
+
+    Color color(ArcVitalsConfig config) {
+        return color.apply(config);
+    }
+
+    int threshold(ArcVitalsConfig config) {
+        return threshold.applyAsInt(config);
+    }
+
+    Side side(ArcVitalsConfig config) {
+        return side.apply(config);
     }
 
     String restoreStatName() {
         return restoreStatName;
-    }
-
-    int current(Client client) {
-        switch (this) {
-            case HITPOINTS:
-                return client.getBoostedSkillLevel(Skill.HITPOINTS);
-            case PRAYER:
-                return client.getBoostedSkillLevel(Skill.PRAYER);
-            case SPECIAL_ATTACK:
-                return client.getVarpValue(VarPlayerID.SA_ENERGY) / 10;
-            case RUN_ENERGY:
-                return client.getEnergy() / 100;
-            default:
-                return 0;
-        }
-    }
-
-    int max(Client client) {
-        switch (this) {
-            case HITPOINTS:
-                return client.getRealSkillLevel(Skill.HITPOINTS);
-            case PRAYER:
-                return client.getRealSkillLevel(Skill.PRAYER);
-            default:
-                return 100;
-        }
     }
 }
