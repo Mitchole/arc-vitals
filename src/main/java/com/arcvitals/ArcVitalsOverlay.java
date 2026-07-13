@@ -6,7 +6,10 @@ import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -27,6 +30,16 @@ public class ArcVitalsOverlay extends Overlay {
     private final ArcVitalsConfig config;
     private final ItemStatChangesService itemStatService;
     private final CombatTracker combatTracker;
+
+    private final Map<Long, Shape> capsuleCache = new HashMap<>();
+    private int cacheCx = Integer.MIN_VALUE;
+    private int cacheCy;
+    private int cacheSize;
+    private int cacheThickness;
+    private int cacheGap;
+    private int cacheBarSpacing;
+    private int cacheCurve;
+    private boolean cacheFlatEnds;
 
     @Inject
     ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
@@ -67,6 +80,7 @@ public class ArcVitalsOverlay extends Overlay {
 
         int cx = centreX();
         int cy = centreY();
+        refreshCapsuleCache(cx, cy);
 
         drawSide(g, states, Side.LEFT, true, anyLow, cx, cy);
         drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy);
@@ -105,10 +119,13 @@ public class ArcVitalsOverlay extends Overlay {
         Color previewColor = (restore > 0) ? lighten(fill) : null;
 
         Color outline = config.showOutline() ? config.outlineColor() : null;
-        ArcBar.draw(g, cx, cy, config.size(), config.thickness(), gap, config.curve(),
-            leftSide, config.fillDirection(), self.fraction, fill, config.trackColor(),
-            config.flatEnds(), outline, config.outlineWidth(),
-            previewFraction, previewColor);
+        long cacheKey = (long) index * 2 + (leftSide ? 1 : 0);
+        Shape capsule = capsuleCache.computeIfAbsent(cacheKey,
+            k -> ArcBar.capsule(cx, cy, config.size(), config.thickness(), gap, config.curve(),
+                leftSide, config.flatEnds()));
+        ArcBar.draw(g, capsule, cy, config.size(), config.thickness(),
+            config.fillDirection(), self.fraction, fill, config.trackColor(),
+            outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
         if (!txt.isEmpty()) {
@@ -172,6 +189,30 @@ public class ArcVitalsOverlay extends Overlay {
             vpY = 0;
         }
         return vpY + vpH / 2 + config.offsetY();
+    }
+
+    // Clears the cached capsule shapes whenever any input to their geometry changes.
+    // cx/cy are included because the shapes are positioned absolutely.
+    private void refreshCapsuleCache(int cx, int cy) {
+        int size = config.size();
+        int thickness = config.thickness();
+        int gap = config.gap();
+        int spacing = config.barSpacing();
+        int curve = config.curve();
+        boolean flat = config.flatEnds();
+        if (cx != cacheCx || cy != cacheCy || size != cacheSize || thickness != cacheThickness
+            || gap != cacheGap || spacing != cacheBarSpacing || curve != cacheCurve
+            || flat != cacheFlatEnds) {
+            capsuleCache.clear();
+            cacheCx = cx;
+            cacheCy = cy;
+            cacheSize = size;
+            cacheThickness = thickness;
+            cacheGap = gap;
+            cacheBarSpacing = spacing;
+            cacheCurve = curve;
+            cacheFlatEnds = flat;
+        }
     }
 
     private static float clamp01(float v) {

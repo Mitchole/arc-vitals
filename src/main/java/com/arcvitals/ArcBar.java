@@ -14,10 +14,10 @@ final class ArcBar {
     private ArcBar() {
     }
 
-    static void draw(Graphics2D g, int cx, int cy, int size, int thickness, int gap, int curveDegrees,
-                     boolean leftSide, FillDirection dir, double fraction, Color fill, Color track,
-                     boolean flatEnds, Color outlineColor, int outlineWidth,
-                     double previewFraction, Color previewColor) {
+    // Builds the closed capsule shape for a bar. Positioned absolutely at (cx, cy);
+    // callers that cache the result must invalidate when cx/cy or any layout param changes.
+    static Shape capsule(int cx, int cy, int size, int thickness, int gap, int curveDegrees,
+                         boolean leftSide, boolean flatEnds) {
         double half = Math.toRadians(curveDegrees) / 2.0;
         double sinHalf = Math.sin(half);
         if (sinHalf < 1e-4) {
@@ -33,8 +33,13 @@ final class ArcBar {
         Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, startAngle, curveDegrees, Arc2D.OPEN);
 
         int cap = flatEnds ? BasicStroke.CAP_BUTT : BasicStroke.CAP_ROUND;
-        Shape capsule = new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
+        return new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
+    }
 
+    static void draw(Graphics2D g, Shape capsule, int cy, int size, int thickness,
+                     FillDirection dir, double fraction, Color fill, Color track,
+                     Color outlineColor, int outlineWidth,
+                     double previewFraction, Color previewColor) {
         Object oldAa = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         Stroke oldStroke = g.getStroke();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
