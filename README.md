@@ -6,12 +6,17 @@ glancing at the orbs.
 
 ## Features
 
-- Curved Hitpoints and Prayer bars flanking the centre of the screen.
+- Curved Hitpoints and Prayer bars flanking the centre of the screen, with
+  flat or rounded ends and an optional outline.
 - Adjustable position, size, thickness, gap and curve.
 - Value text under each bar: current/max, percent, both, or off.
+- Restore preview: hovering food or a potion shows how much it would restore
+  as a lighter segment on the bar.
 - Base opacity so the HUD can sit quietly out of the way.
 - Low-stat alert: a bar brightens (and optionally turns red) when it drops
   below a threshold you set. Alert per bar, for the whole HUD, or not at all.
+- Optionally hide the HUD once you have been out of combat for a set number of
+  seconds.
 
 ## Configuration
 
