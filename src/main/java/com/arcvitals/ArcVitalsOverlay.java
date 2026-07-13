@@ -18,7 +18,7 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.itemstats.Effect;
 import net.runelite.client.plugins.itemstats.ItemStatChangesService;
-import net.runelite.client.plugins.itemstats.StatChange;
+import net.runelite.client.plugins.itemstats.StatsChanges;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -78,17 +78,19 @@ public class ArcVitalsOverlay extends Overlay {
             return null;
         }
 
+        StatsChanges hovered = config.showRestorePreview() ? resolveHovered() : null;
+
         int cx = centreX();
         int cy = centreY();
         refreshCapsuleCache(cx, cy);
 
-        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy);
-        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy);
+        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered);
+        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered);
         return null;
     }
 
     private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
-                          boolean anyLow, int cx, int cy) {
+                          boolean anyLow, int cx, int cy, StatsChanges hovered) {
         int index = 0;
         for (Vital v : Vital.values()) {
             BarState s = states.get(v);
@@ -96,21 +98,21 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
-            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index);
+            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered);
             index++;
         }
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,
-                           int gap, int cx, int cy, int index) {
+                           int gap, int cx, int cy, int index, StatsChanges hovered) {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
         Color base = v.color(config);
         Color fill = BarState.warn(self, config.warnColorEnabled()) ? config.warnColor() : base;
 
-        int restore = (config.showRestorePreview() && v.restoreStatName() != null)
-            ? restoreFor(v.restoreStatName()) : 0;
+        int restore = (hovered != null && v.restoreStatName() != null)
+            ? RestorePreview.forStat(hovered, v.restoreStatName()) : 0;
 
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(alpha)));
@@ -143,25 +145,26 @@ public class ArcVitalsOverlay extends Overlay {
         g.setComposite(oldComposite);
     }
 
-    private int restoreFor(String statName) {
+    // Resolves the item currently hovered in the inventory to its stat changes, or null when
+    // nothing eligible is hovered. Mirrors RuneLite's ItemStatOverlay: skip while a right-click
+    // menu is open, and only consider inventory items.
+    private StatsChanges resolveHovered() {
+        if (client.isMenuOpen()) {
+            return null;
+        }
         MenuEntry[] menu = client.getMenu().getMenuEntries();
         if (menu.length == 0) {
-            return 0;
+            return null;
         }
         Widget w = menu[menu.length - 1].getWidget();
         if (w == null || w.getId() != InterfaceID.Inventory.ITEMS) {
-            return 0;
+            return null;
         }
         Effect effect = itemStatService.getItemStatChanges(w.getItemId());
         if (effect == null) {
-            return 0;
+            return null;
         }
-        for (StatChange c : effect.calculate(client).getStatChanges()) {
-            if (c.getTheoretical() != 0 && c.getStat().getName().equals(statName)) {
-                return c.getTheoretical();
-            }
-        }
-        return 0;
+        return effect.calculate(client);
     }
 
     private static Color lighten(Color c) {
