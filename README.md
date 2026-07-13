@@ -1,8 +1,8 @@
 # Arc Vitals
 
-An IceHUD inspired Vitals HUD. Two curved bars sit either side of the screen
-centre and track your Hitpoints and Prayer, so you can watch both without
-glancing at the orbs.
+An IceHUD inspired Vitals HUD. Curved bars sit either side of the screen
+centre and track your vitals, so you can watch them without glancing at the
+orbs.
 
 ## Features
 
@@ -23,4 +23,5 @@ glancing at the orbs.
 
 ## Configuration
 
-Settings are grouped into Layout, Appearance and Alerts in the plugin panel.
+Settings are grouped into Layout, a section per bar, Appearance, Alerts and
+Visibility in the plugin panel.
