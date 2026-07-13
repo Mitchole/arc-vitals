@@ -6,8 +6,11 @@ glancing at the orbs.
 
 ## Features
 
-- Curved Hitpoints and Prayer bars flanking the centre of the screen, with
-  flat or rounded ends and an optional outline.
+- Up to four curved bars flanking the centre of the screen: Hitpoints, Prayer,
+  Special attack and Run energy. Each has its own enable toggle, colour, low
+  threshold and side; bars on the same side nest outward. (Special attack and
+  Run energy are off by default.)
+- Flat or rounded ends and an optional outline on every bar.
 - Adjustable position, size, thickness, gap and curve.
 - Value text under each bar: current/max, percent, both, or off.
 - Restore preview: hovering food or a potion shows how much it would restore
