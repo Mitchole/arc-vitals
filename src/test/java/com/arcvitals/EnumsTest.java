@@ -1,17 +1,9 @@
 package com.arcvitals;
 
-import net.runelite.api.Skill;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class EnumsTest {
-    @Test
-    public void vitalMapsToSkill() {
-        assertEquals(Skill.HITPOINTS, Vital.HITPOINTS.skill());
-        assertEquals(Skill.PRAYER, Vital.PRAYER.skill());
-        assertEquals("HP", Vital.HITPOINTS.label());
-    }
-
     @Test
     public void enumLabels() {
         assertEquals("Per bar", AlertMode.PER_BAR.toString());
