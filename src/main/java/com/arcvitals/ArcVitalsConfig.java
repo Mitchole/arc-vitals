@@ -89,11 +89,6 @@ public interface ArcVitalsConfig extends Config {
         return FillDirection.BOTTOM_UP;
     }
 
-    @ConfigItem(keyName = "swapSides", name = "Swap sides", description = "Put Prayer on the left and Hitpoints on the right.", section = layoutSection, position = 8)
-    default boolean swapSides() {
-        return false;
-    }
-
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
