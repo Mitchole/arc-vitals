@@ -26,12 +26,15 @@ public class ArcVitalsOverlay extends Overlay {
     private final Client client;
     private final ArcVitalsConfig config;
     private final ItemStatChangesService itemStatService;
+    private final CombatTracker combatTracker;
 
     @Inject
-    ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService) {
+    ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
+                     CombatTracker combatTracker) {
         this.client = client;
         this.config = config;
         this.itemStatService = itemStatService;
+        this.combatTracker = combatTracker;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.ABOVE_SCENE);
     }
@@ -39,6 +42,10 @@ public class ArcVitalsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D g) {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
+            return null;
+        }
+        if (!CombatTracker.shouldShow(config.hideOutOfCombat(), client.getTickCount(),
+                combatTracker.getLastCombatTick(), config.hideOutOfCombatDelay())) {
             return null;
         }
 
