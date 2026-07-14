@@ -104,4 +104,35 @@ public class ArcBarTest {
         }
         return false;
     }
+
+    @Test
+    public void leftGeometryHasExpectedAnglesAndCentre() {
+        ArcBar.Geometry geo = ArcBar.geometry(200, 200, 140, 12, 70, 4, 110, 0, true, true);
+        // Left bar centred on the 9 o'clock direction (180 deg), sweep 110 deg.
+        assertEquals(125.0, geo.topAngle, 0.5);     // 180 - 55
+        assertEquals(235.0, geo.bottomAngle, 0.5);  // 180 + 55
+        assertEquals(200.0, geo.centerY, 0.001);
+        assertEquals(12, geo.thickness);
+        assertTrue(geo.radius > 0);
+        assertTrue(geo.centerX > 200);              // circle centre is right of the tips
+        assertNotNull(geo.capsule);
+        assertTrue(geo.capsule.getBounds2D().getWidth() > 0);
+        assertTrue(geo.capsule.getBounds2D().getHeight() > 0);
+    }
+
+    @Test
+    public void rightGeometryMirrorsTheAngles() {
+        ArcBar.Geometry geo = ArcBar.geometry(200, 200, 140, 12, 70, 4, 110, 0, false, true);
+        // Right bar centred on the 3 o'clock direction (0 deg).
+        assertEquals(55.0, geo.topAngle, 0.5);      // 0 + 55
+        assertEquals(-55.0, geo.bottomAngle, 0.5);  // 0 - 55
+        assertTrue(geo.centerX < 200);              // circle centre is left of the tips
+    }
+
+    @Test
+    public void capsuleDelegatesToGeometry() {
+        Shape viaCapsule = ArcBar.capsule(200, 200, 140, 12, 70, 4, 110, 0, true, true);
+        Shape viaGeometry = ArcBar.geometry(200, 200, 140, 12, 70, 4, 110, 0, true, true).capsule;
+        assertEquals(viaGeometry.getBounds2D(), viaCapsule.getBounds2D());
+    }
 }

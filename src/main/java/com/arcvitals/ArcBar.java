@@ -14,15 +14,38 @@ final class ArcBar {
     private ArcBar() {
     }
 
-    // Builds the closed capsule shape for a bar nested at the given index on its side.
+    // Immutable per-bar geometry: the stroked capsule plus the data draw() needs to fill by angle.
+    // Angles are Arc2D degrees (0 = east, positive counterclockwise on screen).
+    static final class Geometry {
+        final Shape capsule;
+        final double centerX;
+        final double centerY;
+        final double radius;
+        final int thickness;
+        final double topAngle;
+        final double bottomAngle;
+
+        Geometry(Shape capsule, double centerX, double centerY, double radius, int thickness,
+                 double topAngle, double bottomAngle) {
+            this.capsule = capsule;
+            this.centerX = centerX;
+            this.centerY = centerY;
+            this.radius = radius;
+            this.thickness = thickness;
+            this.topAngle = topAngle;
+            this.bottomAngle = bottomAngle;
+        }
+    }
+
+    // Builds the geometry for a bar nested at the given index on its side.
     // Nested bars are concentric: they share the innermost bar's circle centre and grow in
     // radius by (thickness + spacing) per index, so the gap between them is uniform along the
     // whole arc (no overlap at the ends). Each bar's sweep is chosen so every bar keeps the
     // same height. At index 0 this reduces exactly to the single-bar geometry.
     // Positioned absolutely at (cx, cy); callers that cache the result must invalidate when
     // cx/cy or any layout param changes.
-    static Shape capsule(int cx, int cy, int size, int thickness, int baseGap, int spacing,
-                         int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
+    static Geometry geometry(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                             int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
         double half = Math.toRadians(curveDegrees) / 2.0;
         double sinHalf = Math.sin(half);
         if (sinHalf < 1e-4) {
@@ -43,10 +66,22 @@ final class ArcBar {
         double diameter = radius * 2.0;
         double centreAngle = leftSide ? 180.0 : 0.0;
         double startAngle = centreAngle - (sweepDegrees / 2.0);
+        double endAngle = centreAngle + (sweepDegrees / 2.0);
         Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, startAngle, sweepDegrees, Arc2D.OPEN);
 
         int cap = flatEnds ? BasicStroke.CAP_BUTT : BasicStroke.CAP_ROUND;
-        return new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
+        Shape capsule = new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
+
+        // On the left the smaller angle (start) is the top tip; on the right it is the bottom tip.
+        double topAngle = leftSide ? startAngle : endAngle;
+        double bottomAngle = leftSide ? endAngle : startAngle;
+        return new Geometry(capsule, circleCenterX, cy, radius, thickness, topAngle, bottomAngle);
+    }
+
+    // Retained delegate so existing callers keep working; removed once draw() takes Geometry.
+    static Shape capsule(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                         int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
+        return geometry(cx, cy, size, thickness, baseGap, spacing, curveDegrees, index, leftSide, flatEnds).capsule;
     }
 
     static void draw(Graphics2D g, Shape capsule, int cy, int size, int thickness,
