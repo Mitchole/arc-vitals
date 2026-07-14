@@ -33,7 +33,7 @@ public class ArcVitalsOverlay extends Overlay {
     private static final Vital[] VITALS = Vital.values();
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
-    private final Map<Long, ArcBar.Geometry> capsuleCache = new HashMap<>();
+    private final Map<Long, ArcBar.Geometry> geometryCache = new HashMap<>();
     private int cacheCx = Integer.MIN_VALUE;
     private int cacheCy;
     private int cacheSize;
@@ -84,7 +84,7 @@ public class ArcVitalsOverlay extends Overlay {
 
         int cx = centreX();
         int cy = centreY();
-        refreshCapsuleCache(cx, cy);
+        refreshGeometryCache(cx, cy);
 
         drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered);
         drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered);
@@ -124,7 +124,7 @@ public class ArcVitalsOverlay extends Overlay {
 
         Color outline = config.showOutline() ? config.outlineColor() : null;
         long cacheKey = (long) index * 2 + (leftSide ? 1 : 0);
-        ArcBar.Geometry geo = capsuleCache.computeIfAbsent(cacheKey,
+        ArcBar.Geometry geo = geometryCache.computeIfAbsent(cacheKey,
             k -> ArcBar.geometry(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
         ArcBar.draw(g, geo, config.fillDirection(), self.fraction, fill, config.trackColor(),
@@ -195,9 +195,9 @@ public class ArcVitalsOverlay extends Overlay {
         return vpY + vpH / 2 + config.offsetY();
     }
 
-    // Clears the cached capsule shapes whenever any input to their geometry changes.
-    // cx/cy are included because the shapes are positioned absolutely.
-    private void refreshCapsuleCache(int cx, int cy) {
+    // Clears the cached per-bar geometry whenever any input to it changes.
+    // cx/cy are included because the geometry is positioned absolutely.
+    private void refreshGeometryCache(int cx, int cy) {
         int size = config.size();
         int thickness = config.thickness();
         int gap = config.gap();
@@ -207,7 +207,7 @@ public class ArcVitalsOverlay extends Overlay {
         if (cx != cacheCx || cy != cacheCy || size != cacheSize || thickness != cacheThickness
             || gap != cacheGap || spacing != cacheBarSpacing || curve != cacheCurve
             || flat != cacheFlatEnds) {
-            capsuleCache.clear();
+            geometryCache.clear();
             cacheCx = cx;
             cacheCy = cy;
             cacheSize = size;

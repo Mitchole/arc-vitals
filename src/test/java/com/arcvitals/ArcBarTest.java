@@ -122,12 +122,28 @@ public class ArcBarTest {
         assertTrue(greenAround(img, 166, 132));
     }
 
+    @Test
+    public void bottomUpRightFillsBottomTipNotTopTip() {
+        BufferedImage img = drawRight(FillDirection.BOTTOM_UP, 0.35);
+        assertTrue("right bottom tip should be filled", greenAround(img, 234, 268));
+        assertFalse("right top tip should be empty", greenAround(img, 234, 132));
+    }
+
     // ---- helpers ----
 
     private static BufferedImage drawLeft(FillDirection dir, double fraction) {
         BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         ArcBar.Geometry geo = ArcBar.geometry(200, 200, 140, 12, 70, 4, 110, 0, true, true);
+        ArcBar.draw(g, geo, dir, fraction, FILL, TRACK, null, 0, 0.0, null);
+        g.dispose();
+        return img;
+    }
+
+    private static BufferedImage drawRight(FillDirection dir, double fraction) {
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        ArcBar.Geometry geo = ArcBar.geometry(200, 200, 140, 12, 70, 4, 110, 0, false, true);
         ArcBar.draw(g, geo, dir, fraction, FILL, TRACK, null, 0, 0.0, null);
         g.dispose();
         return img;
