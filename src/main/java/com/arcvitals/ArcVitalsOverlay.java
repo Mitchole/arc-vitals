@@ -52,7 +52,7 @@ public class ArcVitalsOverlay extends Overlay {
         this.itemStatService = itemStatService;
         this.combatTracker = combatTracker;
         setPosition(OverlayPosition.DYNAMIC);
-        setLayer(OverlayLayer.ABOVE_SCENE);
+        setLayer(OverlayLayer.UNDER_WIDGETS);
     }
 
     @Override
