@@ -7,7 +7,7 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Arc2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.Area;
 
 final class ArcBar {
 
@@ -78,15 +78,8 @@ final class ArcBar {
         return new Geometry(capsule, circleCenterX, cy, radius, thickness, topAngle, bottomAngle);
     }
 
-    // Retained delegate so existing callers keep working; removed once draw() takes Geometry.
-    static Shape capsule(int cx, int cy, int size, int thickness, int baseGap, int spacing,
-                         int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
-        return geometry(cx, cy, size, thickness, baseGap, spacing, curveDegrees, index, leftSide, flatEnds).capsule;
-    }
-
-    static void draw(Graphics2D g, Shape capsule, int cy, int size, int thickness,
-                     FillDirection dir, double fraction, Color fill, Color track,
-                     Color outlineColor, int outlineWidth,
+    static void draw(Graphics2D g, Geometry geo, FillDirection dir, double fraction,
+                     Color fill, Color track, Color outlineColor, int outlineWidth,
                      double previewFraction, Color previewColor) {
         Object oldAa = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         Stroke oldStroke = g.getStroke();
@@ -94,23 +87,23 @@ final class ArcBar {
 
         // Track: the whole capsule.
         g.setColor(track);
-        g.fill(capsule);
+        g.fill(geo.capsule);
 
         double frac = clamp01(fraction);
-        // Current fill: from the anchored end up to the current level.
-        fillBand(g, capsule, cy, size, thickness, dir, 0.0, frac, fill);
+        // Current fill: from the anchored end up to the current level, measured along the arc.
+        fillWedge(g, geo, dir, 0.0, frac, fill);
 
         // Preview: from the current level up to the projected level.
         double prev = clamp01(previewFraction);
         if (previewColor != null && prev > frac) {
-            fillBand(g, capsule, cy, size, thickness, dir, frac, prev, previewColor);
+            fillWedge(g, geo, dir, frac, prev, previewColor);
         }
 
         // Outline: a border around the whole capsule perimeter, including the ends.
         if (outlineColor != null && outlineWidth > 0) {
             g.setColor(outlineColor);
             g.setStroke(new BasicStroke(outlineWidth));
-            g.draw(capsule);
+            g.draw(geo.capsule);
         }
 
         g.setStroke(oldStroke);
@@ -118,34 +111,51 @@ final class ArcBar {
             oldAa == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAa);
     }
 
-    // Fills the capsule within the vertical band covering fractions [lo, hi] of the bar height,
-    // measured from the anchored end. Pads by the stroke thickness at the very ends so the flat/round
-    // caps fill cleanly; the boundary between two adjacent bands (lo>0 or hi<1) stays a flat cut.
-    private static void fillBand(Graphics2D g, Shape capsule, int cy, int size, int thickness,
-                                 FillDirection dir, double lo, double hi, Color color) {
+    // Fills the capsule within the angular band covering fractions [lo, hi] of the arc sweep,
+    // measured from the anchored end (bottom for BOTTOM_UP, top for TOP_DOWN). The band is a pie
+    // wedge from the circle centre, so both boundaries are radial (perpendicular to the arc) - a
+    // crisp cut, not a horizontal slice. The true ends (lo<=0 / hi>=1) are padded by the stroke's
+    // half-thickness in angle so the round/flat end caps fill cleanly; interior boundaries stay a
+    // clean radial cut so the current fill and the preview band abut without overlap.
+    private static void fillWedge(Graphics2D g, Geometry geo, FillDirection dir,
+                                  double lo, double hi, Color color) {
         if (hi <= lo) {
             return;
         }
-        int loPx = (int) Math.round(size * lo);
-        int hiPx = (int) Math.round(size * hi);
-        int pad = thickness;
-        int bandTop;
-        int bandBottom;
+        double anchorAngle;
+        double fullExtent;
         if (dir == FillDirection.BOTTOM_UP) {
-            bandBottom = (cy + size / 2 - loPx) + (lo <= 0.0 ? pad : 0);
-            bandTop = (cy + size / 2 - hiPx) - (hi >= 1.0 ? pad : 0);
+            anchorAngle = geo.bottomAngle;
+            fullExtent = geo.topAngle - geo.bottomAngle;
         } else {
-            bandTop = (cy - size / 2 + loPx) - (lo <= 0.0 ? pad : 0);
-            bandBottom = (cy - size / 2 + hiPx) + (hi >= 1.0 ? pad : 0);
+            anchorAngle = geo.topAngle;
+            fullExtent = geo.bottomAngle - geo.topAngle;
         }
-        Rectangle2D b = capsule.getBounds2D();
-        int clipX = (int) Math.floor(b.getX() - thickness);
-        int clipW = (int) Math.ceil(b.getWidth() + thickness * 2);
-        Shape oldClip = g.getClip();
-        g.clipRect(clipX, bandTop, clipW, bandBottom - bandTop);
+        double sign = Math.signum(fullExtent);
+        if (sign == 0.0) {
+            return;
+        }
+
+        // Angular width (degrees) of the stroke's end cap at this radius.
+        double padDeg = Math.toDegrees((geo.thickness / 2.0) / geo.radius) + 0.5;
+
+        double startDeg = anchorAngle + fullExtent * lo;
+        double endDeg = anchorAngle + fullExtent * hi;
+        if (lo <= 0.0) {
+            startDeg -= sign * padDeg;
+        }
+        if (hi >= 1.0) {
+            endDeg += sign * padDeg;
+        }
+
+        double r = geo.radius + geo.thickness; // safely beyond the capsule's outer edge
+        Arc2D wedge = new Arc2D.Double(geo.centerX - r, geo.centerY - r, r * 2.0, r * 2.0,
+            startDeg, endDeg - startDeg, Arc2D.PIE);
+
+        Area fillArea = new Area(geo.capsule);
+        fillArea.intersect(new Area(wedge));
         g.setColor(color);
-        g.fill(capsule);
-        g.setClip(oldClip);
+        g.fill(fillArea);
     }
 
     private static double clamp01(double v) {

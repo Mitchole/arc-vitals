@@ -6,7 +6,6 @@ import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Shape;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +33,7 @@ public class ArcVitalsOverlay extends Overlay {
     private static final Vital[] VITALS = Vital.values();
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
-    private final Map<Long, Shape> capsuleCache = new HashMap<>();
+    private final Map<Long, ArcBar.Geometry> capsuleCache = new HashMap<>();
     private int cacheCx = Integer.MIN_VALUE;
     private int cacheCy;
     private int cacheSize;
@@ -125,11 +124,10 @@ public class ArcVitalsOverlay extends Overlay {
 
         Color outline = config.showOutline() ? config.outlineColor() : null;
         long cacheKey = (long) index * 2 + (leftSide ? 1 : 0);
-        Shape capsule = capsuleCache.computeIfAbsent(cacheKey,
-            k -> ArcBar.capsule(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+        ArcBar.Geometry geo = capsuleCache.computeIfAbsent(cacheKey,
+            k -> ArcBar.geometry(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
-        ArcBar.draw(g, capsule, cy, config.size(), config.thickness(),
-            config.fillDirection(), self.fraction, fill, config.trackColor(),
+        ArcBar.draw(g, geo, config.fillDirection(), self.fraction, fill, config.trackColor(),
             outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
