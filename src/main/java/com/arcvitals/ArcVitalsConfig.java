@@ -54,7 +54,7 @@ public interface ArcVitalsConfig extends Config {
     @Range(min = 40, max = 400)
     @Units(Units.PIXELS)
     default int size() {
-        return 140;
+        return 150;
     }
 
     @ConfigItem(keyName = "thickness", name = "Bar thickness", description = "Stroke width of each bar.", section = layoutSection, position = 3)
@@ -68,20 +68,20 @@ public interface ArcVitalsConfig extends Config {
     @Range(min = 0, max = 400)
     @Units(Units.PIXELS)
     default int gap() {
-        return 70;
+        return 88;
     }
 
     @ConfigItem(keyName = "barSpacing", name = "Bar spacing", description = "Gap between bars nested on the same side.", section = layoutSection, position = 5)
     @Range(min = 0, max = 40)
     @Units(Units.PIXELS)
     default int barSpacing() {
-        return 4;
+        return 7;
     }
 
     @ConfigItem(keyName = "curve", name = "Curve", description = "How much each bar bows outward, in degrees.", section = layoutSection, position = 6)
     @Range(min = 20, max = 180)
     default int curve() {
-        return 110;
+        return 120;
     }
 
     @ConfigItem(keyName = "fillDirection", name = "Fill direction", description = "Which way each bar drains.", section = layoutSection, position = 7)

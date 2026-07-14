@@ -4,50 +4,47 @@
 
 # Arc Vitals
 
-An IceHUD inspired vitals HUD for RuneLite. Curved bars sit either side of the
-screen centre and fill and drain along their curve as your stats change, so you
-can keep an eye on your hitpoints and prayer without looking down at the orbs.
+A vitals HUD for RuneLite, inspired by IceHUD. Curved bars sit either side of
+your character and follow the curve as they fill and drain, so you can watch your
+hitpoints and prayer without dragging your eyes down to the orbs.
 
 ![Arc Vitals in game](screenshot.png)
 
 ## Features
 
-- Up to four curved bars flanking the centre of the screen: Hitpoints, Prayer,
-  Special attack and Run energy. Each has its own toggle, colour, low threshold
-  and side, and bars on the same side nest outward. Special attack and Run
-  energy are off by default.
-- Flat or rounded bar ends, with an optional outline.
-- Adjustable position, size, thickness, gap and curve.
-- Value text under each bar: current/max, a percentage, both, or nothing.
-- Restore preview: hover food or a potion and the bar shows how much it would
-  restore as a lighter segment.
-- Base opacity, so the HUD can sit quietly in the background.
-- Low-stat alert: a bar brightens (and can turn red) once it drops below the
-  threshold you set. Alert per bar, for the whole HUD, or off.
-- Option to hide the HUD once you have been out of combat for a set number of
-  seconds.
+- Up to four bars: hitpoints, prayer, special attack and run energy. Each one
+  gets its own colour, side and low threshold, and you can turn each on or off.
+  Put two on the same side and they nest one outside the other. Special attack
+  and run energy start switched off.
+- A value readout under each bar. Show the current and max, a percentage, both,
+  or nothing at all.
+- Hover a bit of food or a potion and the bar shows how much it would heal you,
+  drawn as a lighter segment above the current fill.
+- Low-stat alerts. A bar brightens once it drops past the threshold you set, and
+  it can flip to a warning colour too. Have the alert on each bar, across the
+  whole HUD, or off.
+- Flat or rounded bar ends, an optional outline, and a resting opacity so the
+  whole thing can fade back when you're not looking at it.
+- If you'd rather only see it mid-fight, there's an option to hide the HUD once
+  you've been out of combat for a few seconds.
 
 ## Getting started
 
-Install Arc Vitals from the Plugin Hub and enable it. Out of the box you get two
-bars: hitpoints on the left, prayer on the right. Everything else is optional and
-stays off until you switch it on.
+Install Arc Vitals from the Plugin Hub and turn it on. You start with two bars,
+hitpoints on the left and prayer on the right. Everything past that stays off
+until you want it.
 
 ## Configuration
 
-The settings panel is grouped so you can find things quickly:
-
-- **Layout** sets the position, size, thickness, gap and curve of the bars.
-- A **section per bar** (Hitpoints, Prayer, Special attack, Run energy) holds
-  that bar's toggle, colour, side and low threshold.
-- **Appearance** covers flat or rounded ends, the outline, value text and base
-  opacity.
-- **Alerts** controls the low-stat warning and its colour.
-- **Visibility** holds the out-of-combat hide option and its delay.
+Open the plugin settings to change any of this. Layout is where the HUD sits plus
+the height, thickness, gap and curve of the bars. Each bar then has its own small
+section for colour, side and threshold. The rest is split across Appearance (bar
+ends, outline, value text, opacity), Alerts (the low-stat warning and its
+colour), and Visibility (the out-of-combat hide and how long it waits).
 
 ## Notes
 
-The bars are anchored to the centre of the game view rather than to your
-character, since the game does not keep your character centred on screen. If you
-play in Stretched Mode the bars are upscaled with the rest of the interface and
-can look a little soft; turning Stretched Mode off keeps them crisp.
+The HUD is pinned to the middle of the game view rather than to your character,
+because the game doesn't keep your character dead centre on screen. One thing to
+watch for: in Stretched Mode the bars get scaled up along with the rest of the
+interface and go a bit soft. Switch Stretched Mode off and they're sharp again.
