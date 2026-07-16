@@ -62,7 +62,8 @@ public class ArcVitalsOverlay extends Overlay {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
             return null;
         }
-        Visibility visibility = resolveVisibility();
+        boolean debug = config.debugEnabled();
+        Visibility visibility = debug ? Visibility.FULL : resolveVisibility();
         if (visibility == Visibility.HIDDEN) {
             return null;
         }
@@ -76,7 +77,9 @@ public class ArcVitalsOverlay extends Overlay {
             if (visibility == Visibility.PRAYER_ONLY && v != Vital.PRAYER) {
                 continue;
             }
-            BarState s = BarState.of(v.current(client), v.max(client), v.threshold(config));
+            int max = v.max(client);
+            int current = debug ? Math.round(max * v.debugPercent(config) / 100f) : v.current(client);
+            BarState s = BarState.of(current, max, v.threshold(config));
             states.put(v, s);
             if (s.low) {
                 anyLow = true;
@@ -88,7 +91,7 @@ public class ArcVitalsOverlay extends Overlay {
 
         StatsChanges hovered = config.showRestorePreview() ? resolveHovered() : null;
 
-        HpStatus hpStatus = HpStatus.of(client.getVarpValue(VarPlayerID.POISON));
+        HpStatus hpStatus = debug ? config.debugPoisonState() : HpStatus.of(client.getVarpValue(VarPlayerID.POISON));
 
         int cx = centreX();
         int cy = centreY();

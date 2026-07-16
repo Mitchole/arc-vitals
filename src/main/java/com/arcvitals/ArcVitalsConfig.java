@@ -36,6 +36,9 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 7)
     String visibilitySection = "visibility";
 
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 8, closedByDefault = true)
+    String debugSection = "debug";
+
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
     @Range(min = -500, max = 500)
     @Units(Units.PIXELS)
@@ -282,5 +285,43 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "showWhilePraying", name = "Show while praying", description = "When hidden out of combat, keep the Prayer bar or the whole HUD visible while any prayer is active.", section = visibilitySection, position = 2)
     default PrayerVisibility showWhilePraying() {
         return PrayerVisibility.PRAYER_BAR;
+    }
+
+    @ConfigItem(keyName = "debugEnabled", name = "Enable debug preview", description = "Preview the bars using the values below instead of live stats.", section = debugSection, position = 0)
+    default boolean debugEnabled() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "debugHpPercent", name = "Hitpoints %", description = "Previewed Hitpoints, as a percent of maximum.", section = debugSection, position = 1)
+    @Range(min = 0, max = 100)
+    @Units(Units.PERCENT)
+    default int debugHpPercent() {
+        return 50;
+    }
+
+    @ConfigItem(keyName = "debugPrayerPercent", name = "Prayer %", description = "Previewed Prayer, as a percent of maximum.", section = debugSection, position = 2)
+    @Range(min = 0, max = 100)
+    @Units(Units.PERCENT)
+    default int debugPrayerPercent() {
+        return 50;
+    }
+
+    @ConfigItem(keyName = "debugSpecPercent", name = "Special attack %", description = "Previewed Special attack, as a percent of maximum.", section = debugSection, position = 3)
+    @Range(min = 0, max = 100)
+    @Units(Units.PERCENT)
+    default int debugSpecPercent() {
+        return 50;
+    }
+
+    @ConfigItem(keyName = "debugRunPercent", name = "Run energy %", description = "Previewed Run energy, as a percent of maximum.", section = debugSection, position = 4)
+    @Range(min = 0, max = 100)
+    @Units(Units.PERCENT)
+    default int debugRunPercent() {
+        return 50;
+    }
+
+    @ConfigItem(keyName = "debugPoisonState", name = "Poison state", description = "Previewed poison state for the Hitpoints bar.", section = debugSection, position = 5)
+    default HpStatus debugPoisonState() {
+        return HpStatus.NONE;
     }
 }

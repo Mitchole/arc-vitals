@@ -58,4 +58,18 @@ public class VitalTest {
         assertEquals("Run Energy", Vital.RUN_ENERGY.restoreStatName());
         assertNull(Vital.SPECIAL_ATTACK.restoreStatName());
     }
+
+    @Test
+    public void debugPercentReadsPerVitalSlider() {
+        ArcVitalsConfig config = mock(ArcVitalsConfig.class);
+        when(config.debugHpPercent()).thenReturn(25);
+        when(config.debugPrayerPercent()).thenReturn(60);
+        when(config.debugSpecPercent()).thenReturn(75);
+        when(config.debugRunPercent()).thenReturn(90);
+
+        assertEquals(25, Vital.HITPOINTS.debugPercent(config));
+        assertEquals(60, Vital.PRAYER.debugPercent(config));
+        assertEquals(75, Vital.SPECIAL_ATTACK.debugPercent(config));
+        assertEquals(90, Vital.RUN_ENERGY.debugPercent(config));
+    }
 }

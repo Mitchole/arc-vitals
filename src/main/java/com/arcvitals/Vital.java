@@ -14,24 +14,28 @@ enum Vital {
         c -> c.getRealSkillLevel(Skill.HITPOINTS),
         ArcVitalsConfig::hpEnabled, ArcVitalsConfig::hpColor,
         ArcVitalsConfig::hpThreshold, ArcVitalsConfig::hpSide,
+        ArcVitalsConfig::debugHpPercent,
         "Hitpoints"),
     PRAYER(
         c -> c.getBoostedSkillLevel(Skill.PRAYER),
         c -> c.getRealSkillLevel(Skill.PRAYER),
         ArcVitalsConfig::prayerEnabled, ArcVitalsConfig::prayerColor,
         ArcVitalsConfig::prayerThreshold, ArcVitalsConfig::prayerSide,
+        ArcVitalsConfig::debugPrayerPercent,
         "Prayer"),
     SPECIAL_ATTACK(
         c -> c.getVarpValue(VarPlayerID.SA_ENERGY) / 10,
         c -> 100,
         ArcVitalsConfig::specEnabled, ArcVitalsConfig::specColor,
         ArcVitalsConfig::specThreshold, ArcVitalsConfig::specSide,
+        ArcVitalsConfig::debugSpecPercent,
         null),
     RUN_ENERGY(
         c -> c.getEnergy() / 100,
         c -> 100,
         ArcVitalsConfig::runEnabled, ArcVitalsConfig::runColor,
         ArcVitalsConfig::runThreshold, ArcVitalsConfig::runSide,
+        ArcVitalsConfig::debugRunPercent,
         "Run Energy");
 
     private final ToIntFunction<Client> current;
@@ -40,18 +44,20 @@ enum Vital {
     private final Function<ArcVitalsConfig, Color> color;
     private final ToIntFunction<ArcVitalsConfig> threshold;
     private final Function<ArcVitalsConfig, Side> side;
+    private final ToIntFunction<ArcVitalsConfig> debugPercent;
     private final String restoreStatName;
 
     Vital(ToIntFunction<Client> current, ToIntFunction<Client> max,
           Predicate<ArcVitalsConfig> enabled, Function<ArcVitalsConfig, Color> color,
           ToIntFunction<ArcVitalsConfig> threshold, Function<ArcVitalsConfig, Side> side,
-          String restoreStatName) {
+          ToIntFunction<ArcVitalsConfig> debugPercent, String restoreStatName) {
         this.current = current;
         this.max = max;
         this.enabled = enabled;
         this.color = color;
         this.threshold = threshold;
         this.side = side;
+        this.debugPercent = debugPercent;
         this.restoreStatName = restoreStatName;
     }
 
@@ -77,6 +83,10 @@ enum Vital {
 
     Side side(ArcVitalsConfig config) {
         return side.apply(config);
+    }
+
+    int debugPercent(ArcVitalsConfig config) {
+        return debugPercent.applyAsInt(config);
     }
 
     String restoreStatName() {
