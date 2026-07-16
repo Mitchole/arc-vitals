@@ -320,7 +320,7 @@ public interface ArcVitalsConfig extends Config {
         return 50;
     }
 
-    @ConfigItem(keyName = "debugPoisonState", name = "Poison state", description = "Previewed poison state for the Hitpoints bar.", section = debugSection, position = 5)
+    @ConfigItem(keyName = "debugPoisonState", name = "Poison state", description = "Previewed poison state for the Hitpoints bar. The low-stat warning colour still takes priority.", section = debugSection, position = 5)
     default HpStatus debugPoisonState() {
         return HpStatus.NONE;
     }
