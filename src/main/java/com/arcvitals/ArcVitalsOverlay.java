@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.Prayer;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.itemstats.Effect;
@@ -31,6 +32,7 @@ public class ArcVitalsOverlay extends Overlay {
     private final CombatTracker combatTracker;
 
     private static final Vital[] VITALS = Vital.values();
+    private static final Prayer[] PRAYERS = Prayer.values();
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
     private final Map<Long, ArcBar.Geometry> geometryCache = new HashMap<>();
@@ -59,8 +61,8 @@ public class ArcVitalsOverlay extends Overlay {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
             return null;
         }
-        if (!CombatTracker.shouldShow(config.hideOutOfCombat(), client.getTickCount(),
-                combatTracker.getLastCombatTick(), config.hideOutOfCombatDelay())) {
+        Visibility visibility = resolveVisibility();
+        if (visibility == Visibility.HIDDEN) {
             return null;
         }
 
@@ -68,6 +70,9 @@ public class ArcVitalsOverlay extends Overlay {
         boolean anyLow = false;
         for (Vital v : VITALS) {
             if (!v.enabled(config)) {
+                continue;
+            }
+            if (visibility == Visibility.PRAYER_ONLY && v != Vital.PRAYER) {
                 continue;
             }
             BarState s = BarState.of(v.current(client), v.max(client), v.threshold(config));
@@ -166,6 +171,23 @@ public class ArcVitalsOverlay extends Overlay {
             return null;
         }
         return effect.calculate(client);
+    }
+
+    private Visibility resolveVisibility() {
+        boolean hide = config.hideOutOfCombat();
+        PrayerVisibility mode = config.showWhilePraying();
+        boolean praying = hide && mode != PrayerVisibility.OFF && anyPrayerActive();
+        return CombatTracker.resolve(hide, client.getTickCount(), combatTracker.getLastCombatTick(),
+            config.hideOutOfCombatDelay(), mode, praying);
+    }
+
+    private boolean anyPrayerActive() {
+        for (Prayer p : PRAYERS) {
+            if (client.isPrayerActive(p)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Color lighten(Color c) {

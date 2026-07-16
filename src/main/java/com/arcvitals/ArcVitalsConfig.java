@@ -261,4 +261,9 @@ public interface ArcVitalsConfig extends Config {
     default int hideOutOfCombatDelay() {
         return 5;
     }
+
+    @ConfigItem(keyName = "showWhilePraying", name = "Show while praying", description = "When hidden out of combat, keep the Prayer bar or the whole HUD visible while any prayer is active.", section = visibilitySection, position = 2)
+    default PrayerVisibility showWhilePraying() {
+        return PrayerVisibility.PRAYER_BAR;
+    }
 }

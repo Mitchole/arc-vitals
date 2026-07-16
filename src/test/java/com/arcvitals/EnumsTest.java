@@ -10,5 +10,8 @@ public class EnumsTest {
         assertEquals("Whole HUD", AlertMode.WHOLE_HUD.toString());
         assertEquals("Bottom up", FillDirection.BOTTOM_UP.toString());
         assertEquals("Current / Max", ValueDisplay.CURRENT_MAX.toString());
+        assertEquals("Off", PrayerVisibility.OFF.toString());
+        assertEquals("Prayer bar", PrayerVisibility.PRAYER_BAR.toString());
+        assertEquals("Whole HUD", PrayerVisibility.WHOLE_HUD.toString());
     }
 }

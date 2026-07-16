@@ -23,16 +23,30 @@ public class CombatTracker {
         return lastCombatTick;
     }
 
-    static boolean shouldShow(boolean hideOutOfCombat, int currentTick, int lastCombatTick, int delaySeconds) {
+    static Visibility resolve(boolean hideOutOfCombat, int currentTick, int lastCombatTick, int delaySeconds,
+                              PrayerVisibility prayerMode, boolean anyPrayerActive) {
         if (!hideOutOfCombat) {
-            return true;
+            return Visibility.FULL;
         }
         int elapsed = currentTick - lastCombatTick;
-        if (elapsed < 0) {
-            // getTickCount() restarts lower after a world hop / login; a stale tick is not combat.
-            return false;
+        // getTickCount() restarts lower after a world hop / login; a stale tick is not combat.
+        if (elapsed >= 0) {
+            int delayTicks = (int) Math.round(delaySeconds / 0.6);
+            if (elapsed <= delayTicks) {
+                return Visibility.FULL;
+            }
         }
-        int delayTicks = (int) Math.round(delaySeconds / 0.6);
-        return elapsed <= delayTicks;
+        if (anyPrayerActive) {
+            switch (prayerMode) {
+                case WHOLE_HUD:
+                    return Visibility.FULL;
+                case PRAYER_BAR:
+                    return Visibility.PRAYER_ONLY;
+                case OFF:
+                default:
+                    break;
+            }
+        }
+        return Visibility.HIDDEN;
     }
 }
