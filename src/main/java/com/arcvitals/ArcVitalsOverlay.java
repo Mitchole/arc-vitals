@@ -15,6 +15,7 @@ import net.runelite.api.GameState;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Prayer;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.itemstats.Effect;
 import net.runelite.client.plugins.itemstats.ItemStatChangesService;
@@ -87,17 +88,19 @@ public class ArcVitalsOverlay extends Overlay {
 
         StatsChanges hovered = config.showRestorePreview() ? resolveHovered() : null;
 
+        HpStatus hpStatus = HpStatus.of(client.getVarpValue(VarPlayerID.POISON));
+
         int cx = centreX();
         int cy = centreY();
         refreshGeometryCache(cx, cy);
 
-        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered);
-        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered);
+        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus);
+        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus);
         return null;
     }
 
     private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
-                          boolean anyLow, int cx, int cy, StatsChanges hovered) {
+                          boolean anyLow, int cx, int cy, StatsChanges hovered, HpStatus hpStatus) {
         int index = 0;
         for (Vital v : VITALS) {
             BarState s = states.get(v);
@@ -105,17 +108,20 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
-            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered);
+            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus);
             index++;
         }
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,
-                           int gap, int cx, int cy, int index, StatsChanges hovered) {
+                           int gap, int cx, int cy, int index, StatsChanges hovered, HpStatus hpStatus) {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
         Color base = v.color(config);
+        if (v == Vital.HITPOINTS) {
+            base = HpStatus.resolve(hpStatus, config.hpPoisonRecolor(), base, config.hpPoisonColor(), config.hpVenomColor());
+        }
         Color fill = BarState.warn(self, config.warnColorEnabled()) ? config.warnColor() : base;
 
         int restore = (hovered != null && v.restoreStatName() != null)

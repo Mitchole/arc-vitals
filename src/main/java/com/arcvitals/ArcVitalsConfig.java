@@ -112,6 +112,23 @@ public interface ArcVitalsConfig extends Config {
         return Side.LEFT;
     }
 
+    @ConfigItem(keyName = "hpPoisonRecolor", name = "Poison recolour", description = "Recolour the Hitpoints bar while poisoned or envenomed.", section = hpSection, position = 4)
+    default boolean hpPoisonRecolor() {
+        return true;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "hpPoisonColor", name = "Poisoned colour", description = "Fill colour of the Hitpoints bar while poisoned.", section = hpSection, position = 5)
+    default Color hpPoisonColor() {
+        return new Color(0, 145, 0);
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "hpVenomColor", name = "Venomed colour", description = "Fill colour of the Hitpoints bar while envenomed.", section = hpSection, position = 6)
+    default Color hpVenomColor() {
+        return new Color(0, 65, 0);
+    }
+
     @ConfigItem(keyName = "prayerEnabled", name = "Show Prayer", description = "Show the Prayer bar.", section = prayerSection, position = 0)
     default boolean prayerEnabled() {
         return true;

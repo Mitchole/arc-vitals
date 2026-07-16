@@ -13,5 +13,8 @@ public class EnumsTest {
         assertEquals("Off", PrayerVisibility.OFF.toString());
         assertEquals("Prayer bar", PrayerVisibility.PRAYER_BAR.toString());
         assertEquals("Whole HUD", PrayerVisibility.WHOLE_HUD.toString());
+        assertEquals("None", HpStatus.NONE.toString());
+        assertEquals("Poisoned", HpStatus.POISONED.toString());
+        assertEquals("Venomed", HpStatus.VENOMED.toString());
     }
 }
