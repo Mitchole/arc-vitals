@@ -23,10 +23,14 @@ hitpoints and prayer without dragging your eyes down to the orbs.
 - Low-stat alerts. A bar brightens once it drops past the threshold you set, and
   it can flip to a warning colour too. Have the alert on each bar, across the
   whole HUD, or off.
+- The hitpoints bar darkens while you're poisoned and darkens further under
+  venom. Both colours can be changed.
 - Flat or rounded bar ends, an optional outline, and a resting opacity so the
   whole thing can fade back when you're not looking at it.
 - If you'd rather only see it mid-fight, there's an option to hide the HUD once
-  you've been out of combat for a few seconds.
+  you've been out of combat for a few seconds. Keep a prayer running and it can
+  hold the prayer bar (or the whole HUD) on screen so the drain doesn't go
+  unnoticed.
 
 ## Getting started
 
@@ -40,7 +44,10 @@ Open the plugin settings to change any of this. Layout is where the HUD sits plu
 the height, thickness, gap and curve of the bars. Each bar then has its own small
 section for colour, side and threshold. The rest is split across Appearance (bar
 ends, outline, value text, opacity), Alerts (the low-stat warning and its
-colour), and Visibility (the out-of-combat hide and how long it waits).
+colour), and Visibility (the out-of-combat hide, how long it waits, and whether
+an active prayer keeps the prayer bar or the whole HUD up). A Debug section at
+the bottom fakes bar values and poison states, so you can preview colours and
+thresholds without getting yourself poisoned for real.
 
 ## Notes
 
