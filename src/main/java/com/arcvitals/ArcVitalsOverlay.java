@@ -190,6 +190,9 @@ public class ArcVitalsOverlay extends Overlay {
             config.hideOutOfCombatDelay(), mode, praying);
     }
 
+    // isPrayerActive is deprecated for misreading deadeye/mystic vigour through
+    // their base prayers; iterating every Prayer covers those via their own entries.
+    @SuppressWarnings("deprecation")
     private boolean anyPrayerActive() {
         for (Prayer p : PRAYERS) {
             if (client.isPrayerActive(p)) {
