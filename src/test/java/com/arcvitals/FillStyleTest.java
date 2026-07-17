@@ -1,0 +1,71 @@
+package com.arcvitals;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+
+public class FillStyleTest {
+
+    private static final Color FILL = new Color(0, 200, 0);
+
+    private static Geometry left() {
+        return new ArcGeometry(200, 200, 140, 12, 70, 4, 110, 0, true, true);
+    }
+
+    @Test
+    public void smoothPaintsInsideBodyOnly() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.SMOOTH, FillDirection.BOTTOM_UP, 0.5, FILL);
+        Rectangle b = geo.body().getBounds();
+        int painted = 0;
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                if (opaque(img, x, y)) {
+                    painted++;
+                    assertTrue("painted pixel outside body bounds at " + x + "," + y,
+                        x >= b.x - 2 && x <= b.x + b.width + 2 && y >= b.y - 2 && y <= b.y + b.height + 2);
+                }
+            }
+        }
+        assertTrue("smooth should paint some pixels", painted > 0);
+    }
+
+    // ---- shared helpers (reused by Tasks 6-10) ----
+
+    static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        style.paint(g, geo, dir, frac, color, color);
+        g.dispose();
+        return img;
+    }
+
+    static boolean opaque(BufferedImage img, int x, int y) {
+        if (x < 0 || y < 0 || x >= img.getWidth() || y >= img.getHeight()) {
+            return false;
+        }
+        return (img.getRGB(x, y) >>> 24) > 20;
+    }
+
+    // Average (r+g+b) over opaque pixels in a (2*rad+1) box around (x, y); -1 if none opaque.
+    static int avgBrightness(BufferedImage img, int x, int y, int rad) {
+        long sum = 0;
+        int n = 0;
+        for (int dx = -rad; dx <= rad; dx++) {
+            for (int dy = -rad; dy <= rad; dy++) {
+                int px = x + dx;
+                int py = y + dy;
+                if (!opaque(img, px, py)) {
+                    continue;
+                }
+                int argb = img.getRGB(px, py);
+                sum += ((argb >> 16) & 0xFF) + ((argb >> 8) & 0xFF) + (argb & 0xFF);
+                n++;
+            }
+        }
+        return n == 0 ? -1 : (int) (sum / n);
+    }
+}
