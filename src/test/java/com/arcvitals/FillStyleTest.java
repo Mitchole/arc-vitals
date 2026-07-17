@@ -94,6 +94,36 @@ public class FillStyleTest {
         assertTrue("glow core brighter than edge", core > edge);
     }
 
+    @Test
+    public void notchedDarkensTheMidlineTick() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.NOTCHED, FillDirection.BOTTOM_UP, 1.0, FILL);
+        double[] tick = geo.pointAt(0.5);   // a tick sits here
+        double[] plain = geo.pointAt(0.4);  // plain fill here
+        int atTick = minBrightness(img, (int) tick[0], (int) tick[1], 2);
+        int atPlain = avgBrightness(img, (int) plain[0], (int) plain[1], 1);
+        assertTrue("both sampled", atTick >= 0 && atPlain >= 0);
+        assertTrue("tick darker than plain fill", atTick < atPlain);
+    }
+
+    // Minimum (r+g+b) over opaque pixels in a box; -1 if none opaque.
+    private static int minBrightness(BufferedImage img, int x, int y, int rad) {
+        int min = Integer.MAX_VALUE;
+        for (int dx = -rad; dx <= rad; dx++) {
+            for (int dy = -rad; dy <= rad; dy++) {
+                if (!opaque(img, x + dx, y + dy)) {
+                    continue;
+                }
+                int argb = img.getRGB(x + dx, y + dy);
+                int b = ((argb >> 16) & 0xFF) + ((argb >> 8) & 0xFF) + (argb & 0xFF);
+                if (b < min) {
+                    min = b;
+                }
+            }
+        }
+        return min == Integer.MAX_VALUE ? -1 : min;
+    }
+
     // ---- shared helpers (reused by Tasks 6-10) ----
 
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {

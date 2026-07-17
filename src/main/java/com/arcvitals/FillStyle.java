@@ -10,6 +10,7 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Area;
+import java.awt.geom.Line2D;
 
 // The fill-style axis: how the filled portion of a bar is painted. Public because it is a
 // config return type. `base` is the base fill Paint (a solid colour in Phase 1; a tinted texture
@@ -126,7 +127,28 @@ public enum FillStyle {
     NOTCHED("Notched") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            SMOOTH.paint(g, geo, dir, fraction, base, color); // replaced in Task 10
+            double frac = clamp01(fraction);
+            if (frac <= 0.0) {
+                return;
+            }
+            Area region = geo.fillRegion(0.0, frac, dir);
+            g.setPaint(base);
+            g.fill(region);
+            Shape oldClip = g.getClip();
+            Stroke oldStroke = g.getStroke();
+            g.clip(region);
+            g.setColor(BarColors.scale(color, 0.25));
+            g.setStroke(new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
+            double t = geo.thickness();
+            for (double f : new double[]{0.25, 0.5, 0.75}) {
+                double[] p = geo.pointAt(f);
+                double[] n = geo.normalAt(f);
+                double hx = n[0] * (t / 2.0);
+                double hy = n[1] * (t / 2.0);
+                g.draw(new Line2D.Double(p[0] - hx, p[1] - hy, p[0] + hx, p[1] + hy));
+            }
+            g.setStroke(oldStroke);
+            g.setClip(oldClip);
         }
     };
 
