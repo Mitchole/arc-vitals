@@ -49,6 +49,18 @@ an active prayer keeps the prayer bar or the whole HUD up). A Debug section at
 the bottom fakes bar values and poison states, so you can preview colours and
 thresholds without getting yourself poisoned for real.
 
+### Bar styles
+
+Two more dropdowns control how the bars are drawn. Bar shape, in Layout, switches
+between the curved arcs and plain straight vertical bars. Fill style, in
+Appearance, switches the fill between a solid colour, a glossy rounded-tube
+highlight, a bright-to-dark gradient, segmented pips, a glowing core, or notches
+marking the 25/50/75% points.
+
+Each bar's own section carries the same two dropdowns, both set to Inherit by
+default so they follow the global choice. Switch either one to override just
+that bar.
+
 ## Notes
 
 The HUD is pinned to the middle of the game view rather than to your character,
