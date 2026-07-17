@@ -36,7 +36,7 @@ public class ArcVitalsOverlay extends Overlay {
     private static final Prayer[] PRAYERS = Prayer.values();
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
-    private final Map<Long, ArcBar.Geometry> geometryCache = new HashMap<>();
+    private final Map<Long, Geometry> geometryCache = new HashMap<>();
     private int cacheCx = Integer.MIN_VALUE;
     private int cacheCy;
     private int cacheSize;
@@ -137,12 +137,13 @@ public class ArcVitalsOverlay extends Overlay {
         Color previewColor = (restore > 0) ? lighten(fill) : null;
 
         Color outline = config.showOutline() ? config.outlineColor() : null;
-        long cacheKey = (long) index * 2 + (leftSide ? 1 : 0);
-        ArcBar.Geometry geo = geometryCache.computeIfAbsent(cacheKey,
-            k -> ArcBar.geometry(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+        BarShape shape = v.shape(config);
+        long cacheKey = ((long) shape.ordinal() << 8) | ((long) index << 1) | (leftSide ? 1 : 0);
+        Geometry geo = geometryCache.computeIfAbsent(cacheKey,
+            k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
-        ArcBar.draw(g, geo, config.fillDirection(), self.fraction, fill, config.trackColor(),
-            outline, config.outlineWidth(), previewFraction, previewColor);
+        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, fill,
+            config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
         if (!txt.isEmpty()) {
