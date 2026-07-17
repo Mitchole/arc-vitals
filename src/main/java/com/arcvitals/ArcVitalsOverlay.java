@@ -6,6 +6,7 @@ import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class ArcVitalsOverlay extends Overlay {
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
     private final Map<Long, Geometry> geometryCache = new HashMap<>();
+    private final PatternPaints patternPaints = new PatternPaints();
     private int cacheCx = Integer.MIN_VALUE;
     private int cacheCy;
     private int cacheSize;
@@ -142,7 +144,8 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = geometryCache.computeIfAbsent(cacheKey,
             k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
-        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, fill, fill,
+        Paint basePaint = patternPaints.resolve(v.pattern(config), fill);
+        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, basePaint, fill,
             config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
