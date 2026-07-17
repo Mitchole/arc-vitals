@@ -92,6 +92,11 @@ public interface ArcVitalsConfig extends Config {
         return FillDirection.BOTTOM_UP;
     }
 
+    @ConfigItem(keyName = "barShape", name = "Bar shape", description = "Overall shape of every bar.", section = layoutSection, position = 8)
+    default BarShape barShape() {
+        return BarShape.ARC;
+    }
+
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
@@ -132,6 +137,16 @@ public interface ArcVitalsConfig extends Config {
         return new Color(0, 65, 0);
     }
 
+    @ConfigItem(keyName = "hpShapeOverride", name = "Hitpoints shape", description = "Shape for the Hitpoints bar. Inherit uses the global bar shape.", section = hpSection, position = 7)
+    default ShapeOverride hpShapeOverride() {
+        return ShapeOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "hpFillOverride", name = "Hitpoints fill style", description = "Fill style for the Hitpoints bar. Inherit uses the global fill style.", section = hpSection, position = 8)
+    default FillStyleOverride hpFillOverride() {
+        return FillStyleOverride.INHERIT;
+    }
+
     @ConfigItem(keyName = "prayerEnabled", name = "Show Prayer", description = "Show the Prayer bar.", section = prayerSection, position = 0)
     default boolean prayerEnabled() {
         return true;
@@ -153,6 +168,16 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "prayerSide", name = "Prayer side", description = "Which side the Prayer bar is on.", section = prayerSection, position = 3)
     default Side prayerSide() {
         return Side.RIGHT;
+    }
+
+    @ConfigItem(keyName = "prayerShapeOverride", name = "Prayer shape", description = "Shape for the Prayer bar. Inherit uses the global bar shape.", section = prayerSection, position = 4)
+    default ShapeOverride prayerShapeOverride() {
+        return ShapeOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "prayerFillOverride", name = "Prayer fill style", description = "Fill style for the Prayer bar. Inherit uses the global fill style.", section = prayerSection, position = 5)
+    default FillStyleOverride prayerFillOverride() {
+        return FillStyleOverride.INHERIT;
     }
 
     @ConfigItem(keyName = "specEnabled", name = "Show Special attack", description = "Show the Special attack bar.", section = specSection, position = 0)
@@ -178,6 +203,16 @@ public interface ArcVitalsConfig extends Config {
         return Side.LEFT;
     }
 
+    @ConfigItem(keyName = "specShapeOverride", name = "Special attack shape", description = "Shape for the Special attack bar. Inherit uses the global bar shape.", section = specSection, position = 4)
+    default ShapeOverride specShapeOverride() {
+        return ShapeOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "specFillOverride", name = "Special attack fill style", description = "Fill style for the Special attack bar. Inherit uses the global fill style.", section = specSection, position = 5)
+    default FillStyleOverride specFillOverride() {
+        return FillStyleOverride.INHERIT;
+    }
+
     @ConfigItem(keyName = "runEnabled", name = "Show Run energy", description = "Show the Run energy bar.", section = runSection, position = 0)
     default boolean runEnabled() {
         return false;
@@ -199,6 +234,16 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "runSide", name = "Run energy side", description = "Which side the Run energy bar is on.", section = runSection, position = 3)
     default Side runSide() {
         return Side.RIGHT;
+    }
+
+    @ConfigItem(keyName = "runShapeOverride", name = "Run energy shape", description = "Shape for the Run energy bar. Inherit uses the global bar shape.", section = runSection, position = 4)
+    default ShapeOverride runShapeOverride() {
+        return ShapeOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "runFillOverride", name = "Run energy fill style", description = "Fill style for the Run energy bar. Inherit uses the global fill style.", section = runSection, position = 5)
+    default FillStyleOverride runFillOverride() {
+        return FillStyleOverride.INHERIT;
     }
 
     @Alpha
@@ -238,6 +283,11 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 6)
     default Color outlineColor() {
         return new Color(0, 0, 0, 180);
+    }
+
+    @ConfigItem(keyName = "fillStyle", name = "Fill style", description = "How the filled part of each bar is painted.", section = appearanceSection, position = 7)
+    default FillStyle fillStyle() {
+        return FillStyle.SMOOTH;
     }
 
     @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = alertsSection, position = 0)
