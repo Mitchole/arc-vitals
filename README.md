@@ -51,11 +51,10 @@ thresholds without getting yourself poisoned for real.
 
 ### Bar styles
 
-Two more dropdowns control how the bars are drawn. Bar shape, in Layout, switches
-between the curved arcs and plain straight vertical bars. Fill style, in
-Appearance, switches the fill between a solid colour, a glossy rounded-tube
-highlight, a bright-to-dark gradient, segmented pips, a glowing core, or notches
-marking the 25/50/75% points.
+Two more dropdowns in Layout control how the bars are drawn. Bar shape switches
+between the curved arcs and plain straight vertical bars. Fill style switches the
+fill between a solid colour, a glossy rounded-tube highlight, a bright-to-dark
+gradient, segmented pips, a glowing core, or notches marking the 25/50/75% points.
 
 Each bar's own section carries the same two dropdowns, both set to Inherit by
 default so they follow the global choice. Switch either one to override just

@@ -97,6 +97,11 @@ public interface ArcVitalsConfig extends Config {
         return BarShape.ARC;
     }
 
+    @ConfigItem(keyName = "fillStyle", name = "Fill style", description = "How the filled part of each bar is painted.", section = layoutSection, position = 9)
+    default FillStyle fillStyle() {
+        return FillStyle.SMOOTH;
+    }
+
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
@@ -283,11 +288,6 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 6)
     default Color outlineColor() {
         return new Color(0, 0, 0, 180);
-    }
-
-    @ConfigItem(keyName = "fillStyle", name = "Fill style", description = "How the filled part of each bar is painted.", section = appearanceSection, position = 7)
-    default FillStyle fillStyle() {
-        return FillStyle.SMOOTH;
     }
 
     @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = alertsSection, position = 0)
