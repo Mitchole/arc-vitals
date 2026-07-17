@@ -79,6 +79,21 @@ public class FillStyleTest {
         assertTrue("segmented should leave some gaps", sawGap);
     }
 
+    @Test
+    public void glowHasABrightCoreAlongTheCentreline() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.GLOW, FillDirection.BOTTOM_UP, 1.0, FILL);
+        double[] mid = geo.pointAt(0.5);
+        double[] n = geo.normalAt(0.5);
+        int t = geo.thickness();
+        int edgeX = (int) (mid[0] + n[0] * (t / 2.0 - 1));
+        int edgeY = (int) (mid[1] + n[1] * (t / 2.0 - 1));
+        int core = avgBrightness(img, (int) mid[0], (int) mid[1], 1);
+        int edge = avgBrightness(img, edgeX, edgeY, 1);
+        assertTrue("core and edge painted", core >= 0 && edge >= 0);
+        assertTrue("glow core brighter than edge", core > edge);
+    }
+
     // ---- shared helpers (reused by Tasks 6-10) ----
 
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {

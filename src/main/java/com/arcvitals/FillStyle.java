@@ -1,7 +1,9 @@
 package com.arcvitals;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
@@ -100,7 +102,24 @@ public enum FillStyle {
     GLOW("Glow") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            SMOOTH.paint(g, geo, dir, fraction, base, color); // replaced in Task 9
+            double frac = clamp01(fraction);
+            if (frac <= 0.0) {
+                return;
+            }
+            Area region = geo.fillRegion(0.0, frac, dir);
+            g.setPaint(base);
+            g.fill(region);
+            Shape oldClip = g.getClip();
+            Stroke oldStroke = g.getStroke();
+            Composite oldComposite = g.getComposite();
+            g.clip(region);
+            Shape cl = geo.centerline();
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+            strokeCenterline(g, cl, geo.thickness() * 1.3f, color);
+            g.setComposite(oldComposite);
+            strokeCenterline(g, cl, geo.thickness() * 0.4f, BarColors.lighten(color, 0.55));
+            g.setStroke(oldStroke);
+            g.setClip(oldClip);
         }
     },
 
