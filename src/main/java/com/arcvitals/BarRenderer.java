@@ -25,11 +25,11 @@ final class BarRenderer {
         g.setColor(track);
         g.fill(geo.body());
 
-        double frac = clamp01(fraction);
+        double frac = BarColors.clamp01(fraction);
         style.paint(g, geo, dir, frac, fill, fill);
 
         // Preview: from the current level up to the projected level.
-        double prev = clamp01(previewFraction);
+        double prev = BarColors.clamp01(previewFraction);
         if (previewColor != null && prev > frac) {
             g.setColor(previewColor);
             g.fill(geo.fillRegion(frac, prev, dir));
@@ -45,12 +45,5 @@ final class BarRenderer {
         g.setStroke(oldStroke);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
             oldAa == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAa);
-    }
-
-    private static double clamp01(double v) {
-        if (v < 0.0) {
-            return 0.0;
-        }
-        return v > 1.0 ? 1.0 : v;
     }
 }

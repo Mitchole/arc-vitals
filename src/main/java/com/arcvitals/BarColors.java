@@ -2,8 +2,8 @@ package com.arcvitals;
 
 import java.awt.Color;
 
-// Small colour maths shared by the fill styles, kept in one place so lighten/scale behave
-// identically everywhere.
+// Small shared maths for the bars - colour tweaks (lighten/scale) and fraction clamping -
+// kept in one place so they behave identically everywhere.
 final class BarColors {
 
     private BarColors() {
@@ -25,6 +25,14 @@ final class BarColors {
             clamp((int) Math.round(c.getGreen() * f)),
             clamp((int) Math.round(c.getBlue() * f)),
             c.getAlpha());
+    }
+
+    // Clamps v to the 0..1 range.
+    static double clamp01(double v) {
+        if (v < 0.0) {
+            return 0.0;
+        }
+        return v > 1.0 ? 1.0 : v;
     }
 
     private static int clamp(int v) {

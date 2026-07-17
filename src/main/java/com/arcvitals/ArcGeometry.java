@@ -6,7 +6,7 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 
-// The curved-capsule geometry: today's ArcBar maths behind the Geometry interface.
+// The curved-capsule geometry: a stroked circular arc, filled by an angular pie-wedge.
 // Angles are Arc2D degrees (0 = east, positive counterclockwise on screen).
 final class ArcGeometry implements Geometry {
 

@@ -20,7 +20,7 @@ public enum FillStyle {
     SMOOTH("Smooth") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -32,7 +32,7 @@ public enum FillStyle {
     GLOSS("Glossy") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -55,7 +55,7 @@ public enum FillStyle {
     GRADIENT("Gradient") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -79,7 +79,7 @@ public enum FillStyle {
     SEGMENTED("Segmented") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -103,7 +103,7 @@ public enum FillStyle {
     GLOW("Glow") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -127,7 +127,7 @@ public enum FillStyle {
     NOTCHED("Notched") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            double frac = clamp01(fraction);
+            double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
@@ -170,12 +170,5 @@ public enum FillStyle {
         g.setStroke(new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setColor(c);
         g.draw(centerline);
-    }
-
-    static double clamp01(double v) {
-        if (v < 0.0) {
-            return 0.0;
-        }
-        return v > 1.0 ? 1.0 : v;
     }
 }
