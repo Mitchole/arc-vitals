@@ -9,14 +9,17 @@ public class OverrideResolveTest {
 
     @Test
     public void shapeInheritReturnsGlobal() {
-        assertEquals(BarShape.ARC, ShapeOverride.INHERIT.resolve(BarShape.ARC));
-        assertEquals(BarShape.STRAIGHT, ShapeOverride.INHERIT.resolve(BarShape.STRAIGHT));
+        for (BarShape global : BarShape.values()) {
+            assertEquals(global, ShapeOverride.INHERIT.resolve(global));
+        }
     }
 
     @Test
     public void shapeOverrideBeatsGlobal() {
         assertEquals(BarShape.ARC, ShapeOverride.ARC.resolve(BarShape.STRAIGHT));
         assertEquals(BarShape.STRAIGHT, ShapeOverride.STRAIGHT.resolve(BarShape.ARC));
+        assertEquals(BarShape.LEAF, ShapeOverride.LEAF.resolve(BarShape.ARC));
+        assertEquals(BarShape.HORN, ShapeOverride.HORN.resolve(BarShape.ARC));
     }
 
     @Test

@@ -17,6 +17,22 @@ public enum BarShape {
             return new StraightGeometry(cx, cy, size, thickness, baseGap, spacing,
                 index, leftSide, flatEnds);
         }
+    },
+    LEAF("Leaf") {
+        @Override
+        Geometry build(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                       int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
+            return new TaperedGeometry(cx, cy, size, thickness, baseGap, spacing,
+                curveDegrees, index, leftSide, TaperProfile.LEAF);
+        }
+    },
+    HORN("Horn") {
+        @Override
+        Geometry build(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                       int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
+            return new TaperedGeometry(cx, cy, size, thickness, baseGap, spacing,
+                curveDegrees, index, leftSide, TaperProfile.HORN);
+        }
     };
 
     private final String label;

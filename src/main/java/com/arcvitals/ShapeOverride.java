@@ -5,7 +5,9 @@ package com.arcvitals;
 public enum ShapeOverride {
     INHERIT("Inherit"),
     ARC("Curved"),
-    STRAIGHT("Straight");
+    STRAIGHT("Straight"),
+    LEAF("Leaf"),
+    HORN("Horn");
 
     private final String label;
 
@@ -19,6 +21,10 @@ public enum ShapeOverride {
                 return BarShape.ARC;
             case STRAIGHT:
                 return BarShape.STRAIGHT;
+            case LEAF:
+                return BarShape.LEAF;
+            case HORN:
+                return BarShape.HORN;
             default:
                 return global;
         }
