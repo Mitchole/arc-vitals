@@ -15,6 +15,7 @@ enum Vital {
         ArcVitalsConfig::hpEnabled, ArcVitalsConfig::hpColor,
         ArcVitalsConfig::hpThreshold, ArcVitalsConfig::hpSide,
         ArcVitalsConfig::hpShapeOverride, ArcVitalsConfig::hpFillOverride,
+        ArcVitalsConfig::hpPatternOverride,
         ArcVitalsConfig::debugHpPercent,
         "Hitpoints"),
     PRAYER(
@@ -23,6 +24,7 @@ enum Vital {
         ArcVitalsConfig::prayerEnabled, ArcVitalsConfig::prayerColor,
         ArcVitalsConfig::prayerThreshold, ArcVitalsConfig::prayerSide,
         ArcVitalsConfig::prayerShapeOverride, ArcVitalsConfig::prayerFillOverride,
+        ArcVitalsConfig::prayerPatternOverride,
         ArcVitalsConfig::debugPrayerPercent,
         "Prayer"),
     SPECIAL_ATTACK(
@@ -31,6 +33,7 @@ enum Vital {
         ArcVitalsConfig::specEnabled, ArcVitalsConfig::specColor,
         ArcVitalsConfig::specThreshold, ArcVitalsConfig::specSide,
         ArcVitalsConfig::specShapeOverride, ArcVitalsConfig::specFillOverride,
+        ArcVitalsConfig::specPatternOverride,
         ArcVitalsConfig::debugSpecPercent,
         null),
     RUN_ENERGY(
@@ -39,6 +42,7 @@ enum Vital {
         ArcVitalsConfig::runEnabled, ArcVitalsConfig::runColor,
         ArcVitalsConfig::runThreshold, ArcVitalsConfig::runSide,
         ArcVitalsConfig::runShapeOverride, ArcVitalsConfig::runFillOverride,
+        ArcVitalsConfig::runPatternOverride,
         ArcVitalsConfig::debugRunPercent,
         "Run Energy");
 
@@ -50,6 +54,7 @@ enum Vital {
     private final Function<ArcVitalsConfig, Side> side;
     private final Function<ArcVitalsConfig, ShapeOverride> shapeOverride;
     private final Function<ArcVitalsConfig, FillStyleOverride> fillOverride;
+    private final Function<ArcVitalsConfig, PatternOverride> patternOverride;
     private final ToIntFunction<ArcVitalsConfig> debugPercent;
     private final String restoreStatName;
 
@@ -58,6 +63,7 @@ enum Vital {
           ToIntFunction<ArcVitalsConfig> threshold, Function<ArcVitalsConfig, Side> side,
           Function<ArcVitalsConfig, ShapeOverride> shapeOverride,
           Function<ArcVitalsConfig, FillStyleOverride> fillOverride,
+          Function<ArcVitalsConfig, PatternOverride> patternOverride,
           ToIntFunction<ArcVitalsConfig> debugPercent, String restoreStatName) {
         this.current = current;
         this.max = max;
@@ -67,6 +73,7 @@ enum Vital {
         this.side = side;
         this.shapeOverride = shapeOverride;
         this.fillOverride = fillOverride;
+        this.patternOverride = patternOverride;
         this.debugPercent = debugPercent;
         this.restoreStatName = restoreStatName;
     }
@@ -101,6 +108,10 @@ enum Vital {
 
     FillStyle fillStyle(ArcVitalsConfig config) {
         return fillOverride.apply(config).resolve(config.fillStyle());
+    }
+
+    BarPattern pattern(ArcVitalsConfig config) {
+        return patternOverride.apply(config).resolve(config.barPattern());
     }
 
     int debugPercent(ArcVitalsConfig config) {

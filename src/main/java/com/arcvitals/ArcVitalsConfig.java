@@ -108,6 +108,11 @@ public interface ArcVitalsConfig extends Config {
         return 14;
     }
 
+    @ConfigItem(keyName = "barPattern", name = "Bar pattern", description = "Material texture painted under each bar's fill.", section = layoutSection, position = 11)
+    default BarPattern barPattern() {
+        return BarPattern.NONE;
+    }
+
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
@@ -158,6 +163,11 @@ public interface ArcVitalsConfig extends Config {
         return FillStyleOverride.INHERIT;
     }
 
+    @ConfigItem(keyName = "hpPatternOverride", name = "Hitpoints pattern", description = "Pattern for the Hitpoints bar. Inherit uses the global bar pattern.", section = hpSection, position = 9)
+    default PatternOverride hpPatternOverride() {
+        return PatternOverride.INHERIT;
+    }
+
     @ConfigItem(keyName = "prayerEnabled", name = "Show Prayer", description = "Show the Prayer bar.", section = prayerSection, position = 0)
     default boolean prayerEnabled() {
         return true;
@@ -189,6 +199,11 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "prayerFillOverride", name = "Prayer fill style", description = "Fill style for the Prayer bar. Inherit uses the global fill style.", section = prayerSection, position = 5)
     default FillStyleOverride prayerFillOverride() {
         return FillStyleOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "prayerPatternOverride", name = "Prayer pattern", description = "Pattern for the Prayer bar. Inherit uses the global bar pattern.", section = prayerSection, position = 6)
+    default PatternOverride prayerPatternOverride() {
+        return PatternOverride.INHERIT;
     }
 
     @ConfigItem(keyName = "specEnabled", name = "Show Special attack", description = "Show the Special attack bar.", section = specSection, position = 0)
@@ -224,6 +239,11 @@ public interface ArcVitalsConfig extends Config {
         return FillStyleOverride.INHERIT;
     }
 
+    @ConfigItem(keyName = "specPatternOverride", name = "Special attack pattern", description = "Pattern for the Special attack bar. Inherit uses the global bar pattern.", section = specSection, position = 6)
+    default PatternOverride specPatternOverride() {
+        return PatternOverride.INHERIT;
+    }
+
     @ConfigItem(keyName = "runEnabled", name = "Show Run energy", description = "Show the Run energy bar.", section = runSection, position = 0)
     default boolean runEnabled() {
         return false;
@@ -255,6 +275,11 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "runFillOverride", name = "Run energy fill style", description = "Fill style for the Run energy bar. Inherit uses the global fill style.", section = runSection, position = 5)
     default FillStyleOverride runFillOverride() {
         return FillStyleOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "runPatternOverride", name = "Run energy pattern", description = "Pattern for the Run energy bar. Inherit uses the global bar pattern.", section = runSection, position = 6)
+    default PatternOverride runPatternOverride() {
+        return PatternOverride.INHERIT;
     }
 
     @Alpha
