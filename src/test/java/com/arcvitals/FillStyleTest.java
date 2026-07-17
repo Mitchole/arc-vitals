@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class FillStyleTest {
 
@@ -106,6 +107,16 @@ public class FillStyleTest {
         assertTrue("tick darker than plain fill", atTick < atPlain);
     }
 
+    @Test
+    public void segmentedPipCountFollowsContext() {
+        CountingGeometry geo = new CountingGeometry(left());
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        FillStyle.SEGMENTED.paint(g, geo, FillDirection.BOTTOM_UP, 1.0, new FillContext(FILL, FILL, 7));
+        g.dispose();
+        assertEquals("one fillRegion call per pip at 100%", 7, geo.fillRegionCalls);
+    }
+
     // Minimum (r+g+b) over opaque pixels in a box; -1 if none opaque.
     private static int minBrightness(BufferedImage img, int x, int y, int rad) {
         int min = Integer.MAX_VALUE;
@@ -122,6 +133,47 @@ public class FillStyleTest {
             }
         }
         return min == Integer.MAX_VALUE ? -1 : min;
+    }
+
+    // Wraps a real Geometry and counts fillRegion calls so we can assert the Segmented pip count.
+    private static final class CountingGeometry implements Geometry {
+        private final Geometry inner;
+        int fillRegionCalls;
+
+        CountingGeometry(Geometry inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public java.awt.Shape body() {
+            return inner.body();
+        }
+
+        @Override
+        public java.awt.geom.Area fillRegion(double lo, double hi, FillDirection dir) {
+            fillRegionCalls++;
+            return inner.fillRegion(lo, hi, dir);
+        }
+
+        @Override
+        public java.awt.Shape centerline() {
+            return inner.centerline();
+        }
+
+        @Override
+        public int thickness() {
+            return inner.thickness();
+        }
+
+        @Override
+        public double[] pointAt(double f) {
+            return inner.pointAt(f);
+        }
+
+        @Override
+        public double[] normalAt(double f) {
+            return inner.normalAt(f);
+        }
     }
 
     // ---- shared helpers (reused by Tasks 6-10) ----

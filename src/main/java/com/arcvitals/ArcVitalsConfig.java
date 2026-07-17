@@ -102,6 +102,12 @@ public interface ArcVitalsConfig extends Config {
         return FillStyle.SMOOTH;
     }
 
+    @ConfigItem(keyName = "segments", name = "Segments", description = "Number of pips for the Segmented fill style.", section = layoutSection, position = 10)
+    @Range(min = 4, max = 30)
+    default int segments() {
+        return 14;
+    }
+
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
