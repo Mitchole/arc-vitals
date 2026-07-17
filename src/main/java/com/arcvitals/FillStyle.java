@@ -76,7 +76,24 @@ public enum FillStyle {
     SEGMENTED("Segmented") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            SMOOTH.paint(g, geo, dir, fraction, base, color); // replaced in Task 8
+            double frac = clamp01(fraction);
+            if (frac <= 0.0) {
+                return;
+            }
+            g.setPaint(base);
+            int segs = 14;
+            double cell = 1.0 / segs;
+            double onFrac = 0.72; // fraction of each cell that is a pip; the rest is a gap
+            for (int i = 0; i < segs; i++) {
+                double a = i * cell;
+                if (a >= frac) {
+                    break;
+                }
+                double b = Math.min(a + cell * onFrac, frac);
+                if (b > a) {
+                    g.fill(geo.fillRegion(a, b, dir));
+                }
+            }
         }
     },
 

@@ -60,6 +60,25 @@ public class FillStyleTest {
         assertTrue("gloss highlight brighter at centre", centre > edge);
     }
 
+    @Test
+    public void segmentedLeavesGapsAlongTheFilledSpan() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.SEGMENTED, FillDirection.BOTTOM_UP, 1.0, FILL);
+        boolean sawPip = false;
+        boolean sawGap = false;
+        for (int i = 1; i < 40; i++) {
+            double f = i / 40.0;
+            double[] p = geo.pointAt(f);
+            if (opaque(img, (int) p[0], (int) p[1])) {
+                sawPip = true;
+            } else {
+                sawGap = true;
+            }
+        }
+        assertTrue("segmented should paint some pips", sawPip);
+        assertTrue("segmented should leave some gaps", sawGap);
+    }
+
     // ---- shared helpers (reused by Tasks 6-10) ----
 
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {
