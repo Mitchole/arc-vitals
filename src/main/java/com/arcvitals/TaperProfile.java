@@ -11,7 +11,7 @@ enum TaperProfile {
             return Math.sin(Math.PI * f);
         }
     },
-    // Thick at the bottom (full) end, tapering to a fine point at the top tip (asymmetric).
+    // Thick at the bottom (full) end, tapering to a narrow tip at the top (asymmetric).
     HORN {
         @Override
         double halfScale(double f) {

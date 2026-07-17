@@ -53,4 +53,11 @@ public class BarShapeBuildTest {
         Geometry wide = BarShape.RING.build(200, 200, 140, 12, 70, 4, 180, 0, true, true);
         assertEquals(narrow.body().getBounds2D().getWidth(), wide.body().getBounds2D().getWidth(), 1e-6);
     }
+
+    @Test
+    public void ringIgnoresSize() {
+        Geometry small = BarShape.RING.build(200, 200, 60, 12, 70, 4, 110, 0, true, true);
+        Geometry large = BarShape.RING.build(200, 200, 300, 12, 70, 4, 110, 0, true, true);
+        assertEquals(small.body().getBounds2D().getWidth(), large.body().getBounds2D().getWidth(), 1e-6);
+    }
 }
