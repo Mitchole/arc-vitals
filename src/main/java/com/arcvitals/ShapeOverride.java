@@ -7,7 +7,8 @@ public enum ShapeOverride {
     ARC("Curved"),
     STRAIGHT("Straight"),
     LEAF("Leaf"),
-    HORN("Horn");
+    HORN("Horn"),
+    RING("Ring");
 
     private final String label;
 
@@ -25,6 +26,8 @@ public enum ShapeOverride {
                 return BarShape.LEAF;
             case HORN:
                 return BarShape.HORN;
+            case RING:
+                return BarShape.RING;
             default:
                 return global;
         }

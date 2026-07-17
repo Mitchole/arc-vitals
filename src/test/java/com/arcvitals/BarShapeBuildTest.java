@@ -3,6 +3,7 @@ package com.arcvitals;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 public class BarShapeBuildTest {
 
@@ -38,5 +39,18 @@ public class BarShapeBuildTest {
         double[] hp = horn.pointAt(0.05);
         double[] hn = horn.normalAt(0.05);
         assertTrue(horn.body().contains(hp[0] + hn[0] * off, hp[1] + hn[1] * off));
+    }
+
+    @Test
+    public void ringBuildsRingGeometry() {
+        Geometry g = BarShape.RING.build(200, 200, 140, 12, 70, 4, 110, 0, true, true);
+        assertTrue(g instanceof RingGeometry);
+    }
+
+    @Test
+    public void ringIgnoresCurve() {
+        Geometry narrow = BarShape.RING.build(200, 200, 140, 12, 70, 4, 30, 0, true, true);
+        Geometry wide = BarShape.RING.build(200, 200, 140, 12, 70, 4, 180, 0, true, true);
+        assertEquals(narrow.body().getBounds2D().getWidth(), wide.body().getBounds2D().getWidth(), 1e-6);
     }
 }

@@ -20,6 +20,7 @@ public class OverrideResolveTest {
         assertEquals(BarShape.STRAIGHT, ShapeOverride.STRAIGHT.resolve(BarShape.ARC));
         assertEquals(BarShape.LEAF, ShapeOverride.LEAF.resolve(BarShape.ARC));
         assertEquals(BarShape.HORN, ShapeOverride.HORN.resolve(BarShape.ARC));
+        assertEquals(BarShape.RING, ShapeOverride.RING.resolve(BarShape.ARC));
     }
 
     @Test

@@ -18,5 +18,6 @@ public class EnumsTest {
         assertEquals("Venomed", HpStatus.VENOMED.toString());
         assertEquals("Leaf", BarShape.LEAF.toString());
         assertEquals("Horn", BarShape.HORN.toString());
+        assertEquals("Ring", BarShape.RING.toString());
     }
 }
