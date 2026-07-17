@@ -2,6 +2,7 @@ package com.arcvitals;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Shape;
@@ -33,7 +34,24 @@ public enum FillStyle {
     GRADIENT("Gradient") {
         @Override
         void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
-            SMOOTH.paint(g, geo, dir, fraction, base, color); // replaced in Task 6
+            double frac = clamp01(fraction);
+            if (frac <= 0.0) {
+                return;
+            }
+            double[] anchor = geo.pointAt(dir == FillDirection.BOTTOM_UP ? 0.0 : 1.0);
+            double[] far = geo.pointAt(dir == FillDirection.BOTTOM_UP ? 1.0 : 0.0);
+            Color bright = BarColors.lighten(color, 0.35);
+            Color dark = BarColors.scale(color, 0.5);
+            if (Math.hypot(anchor[0] - far[0], anchor[1] - far[1]) < 1.0) {
+                g.setPaint(base);
+                g.fill(geo.fillRegion(0.0, frac, dir));
+                return;
+            }
+            GradientPaint gp = new GradientPaint(
+                (float) anchor[0], (float) anchor[1], bright,
+                (float) far[0], (float) far[1], dark);
+            g.setPaint(gp);
+            g.fill(geo.fillRegion(0.0, frac, dir));
         }
     },
 

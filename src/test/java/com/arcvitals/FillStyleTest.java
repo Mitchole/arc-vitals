@@ -33,6 +33,18 @@ public class FillStyleTest {
         assertTrue("smooth should paint some pixels", painted > 0);
     }
 
+    @Test
+    public void gradientIsBrighterAtTheAnchorEnd() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.GRADIENT, FillDirection.BOTTOM_UP, 1.0, FILL);
+        double[] bottom = geo.pointAt(0.05); // near the anchored (bottom) end
+        double[] top = geo.pointAt(0.95);    // near the far (top) end
+        int atBottom = avgBrightness(img, (int) bottom[0], (int) bottom[1], 3);
+        int atTop = avgBrightness(img, (int) top[0], (int) top[1], 3);
+        assertTrue("both ends should be painted", atBottom >= 0 && atTop >= 0);
+        assertTrue("anchor end brighter than far end", atBottom > atTop);
+    }
+
     // ---- shared helpers (reused by Tasks 6-10) ----
 
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {
