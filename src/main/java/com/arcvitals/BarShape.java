@@ -14,9 +14,8 @@ public enum BarShape {
         @Override
         Geometry build(int cx, int cy, int size, int thickness, int baseGap, int spacing,
                        int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
-            // Replaced by StraightGeometry in Task 5; ARC keeps behaviour valid until then.
-            return new ArcGeometry(cx, cy, size, thickness, baseGap, spacing,
-                curveDegrees, index, leftSide, flatEnds);
+            return new StraightGeometry(cx, cy, size, thickness, baseGap, spacing,
+                index, leftSide, flatEnds);
         }
     };
 
