@@ -20,35 +20,21 @@ final class ArcGeometry implements Geometry {
 
     ArcGeometry(int cx, int cy, int size, int thickness, int baseGap, int spacing,
                 int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
-        double half = Math.toRadians(curveDegrees) / 2.0;
-        double sinHalf = Math.sin(half);
-        if (sinHalf < 1e-4) {
-            sinHalf = 1e-4;
-        }
-        double baseRadius = (size / 2.0) / sinHalf;
-        double circleCenterX = leftSide ? (cx - baseGap + baseRadius) : (cx + baseGap - baseRadius);
-        double r = baseRadius + index * (double) (thickness + spacing);
-
-        double sinSweepHalf = Math.min(1.0, (size / 2.0) / r);
-        double sweepDegrees = Math.toDegrees(Math.asin(sinSweepHalf) * 2.0);
-
-        double boundX = circleCenterX - r;
-        double boundY = cy - r;
-        double diameter = r * 2.0;
-        double centreAngle = leftSide ? 180.0 : 0.0;
-        double startAngle = centreAngle - (sweepDegrees / 2.0);
-        double endAngle = centreAngle + (sweepDegrees / 2.0);
-        Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, startAngle, sweepDegrees, Arc2D.OPEN);
+        ArcCenterline c = new ArcCenterline(cx, cy, size, thickness, baseGap, spacing,
+            curveDegrees, index, leftSide);
+        double boundX = c.centerX - c.radius;
+        double boundY = c.centerY - c.radius;
+        double diameter = c.radius * 2.0;
+        Arc2D arc = new Arc2D.Double(boundX, boundY, diameter, diameter, c.startAngle, c.sweepDegrees, Arc2D.OPEN);
 
         int cap = flatEnds ? BasicStroke.CAP_BUTT : BasicStroke.CAP_ROUND;
         this.capsule = new BasicStroke(thickness, cap, BasicStroke.JOIN_ROUND).createStrokedShape(arc);
-        this.centerX = circleCenterX;
-        this.centerY = cy;
-        this.radius = r;
+        this.centerX = c.centerX;
+        this.centerY = c.centerY;
+        this.radius = c.radius;
         this.thickness = thickness;
-        // On the left the smaller angle (start) is the top tip; on the right it is the bottom tip.
-        this.topAngle = leftSide ? startAngle : endAngle;
-        this.bottomAngle = leftSide ? endAngle : startAngle;
+        this.topAngle = c.topAngle;
+        this.bottomAngle = c.bottomAngle;
     }
 
     @Override
