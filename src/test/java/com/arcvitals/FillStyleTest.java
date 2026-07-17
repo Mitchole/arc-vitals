@@ -45,6 +45,21 @@ public class FillStyleTest {
         assertTrue("anchor end brighter than far end", atBottom > atTop);
     }
 
+    @Test
+    public void glossIsBrighterOnTheCentrelineThanTheEdge() {
+        Geometry geo = left();
+        BufferedImage img = render(geo, FillStyle.GLOSS, FillDirection.BOTTOM_UP, 1.0, FILL);
+        double[] mid = geo.pointAt(0.5);
+        double[] n = geo.normalAt(0.5);
+        int t = geo.thickness();
+        int edgeX = (int) (mid[0] + n[0] * (t / 2.0 - 1));
+        int edgeY = (int) (mid[1] + n[1] * (t / 2.0 - 1));
+        int centre = avgBrightness(img, (int) mid[0], (int) mid[1], 1);
+        int edge = avgBrightness(img, edgeX, edgeY, 1);
+        assertTrue("centreline and edge both painted", centre >= 0 && edge >= 0);
+        assertTrue("gloss highlight brighter at centre", centre > edge);
+    }
+
     // ---- shared helpers (reused by Tasks 6-10) ----
 
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {
