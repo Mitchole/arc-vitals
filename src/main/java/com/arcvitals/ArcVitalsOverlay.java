@@ -152,9 +152,10 @@ public class ArcVitalsOverlay extends Overlay {
         if (!txt.isEmpty()) {
             g.setFont(FontManager.getRunescapeSmallFont());
             FontMetrics fm = g.getFontMetrics();
-            int tipX = leftSide ? (cx - gap) : (cx + gap);
-            int tx = tipX - fm.stringWidth(txt) / 2;
-            int ty = BarLayout.labelBaselineY(cy, config.size(), fm.getHeight(), index);
+            int[] anchor = BarLayout.labelAnchor(shape, cx, cy, config.size(), gap, config.thickness(),
+                index, fm.getHeight(), leftSide);
+            int tx = anchor[0] - fm.stringWidth(txt) / 2;
+            int ty = anchor[1];
             g.setColor(Color.BLACK);
             g.drawString(txt, tx + 1, ty + 1);
             g.setColor(fill);
