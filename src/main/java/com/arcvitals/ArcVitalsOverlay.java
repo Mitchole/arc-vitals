@@ -142,8 +142,8 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = geometryCache.computeIfAbsent(cacheKey,
             k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
-        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, fill,
-            config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
+        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, fill, fill,
+            14, config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
         if (!txt.isEmpty()) {

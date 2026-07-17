@@ -17,7 +17,7 @@ public class BarRendererTest {
         BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         Geometry geo = BarShape.ARC.build(200, 200, 140, 12, 70, 4, 110, 0, true, true);
-        BarRenderer.draw(g, geo, FillStyle.SMOOTH, dir, frac, FILL, TRACK, OUTLINE, 1, 0.0, null);
+        BarRenderer.draw(g, geo, FillStyle.SMOOTH, dir, frac, FILL, FILL, 14, TRACK, OUTLINE, 1, 0.0, null);
         g.dispose();
         return img;
     }

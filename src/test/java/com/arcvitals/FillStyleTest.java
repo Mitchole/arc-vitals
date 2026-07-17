@@ -129,7 +129,7 @@ public class FillStyleTest {
     static BufferedImage render(Geometry geo, FillStyle style, FillDirection dir, double frac, Color color) {
         BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
-        style.paint(g, geo, dir, frac, color, color);
+        style.paint(g, geo, dir, frac, new FillContext(color, color, 14));
         g.dispose();
         return img;
     }

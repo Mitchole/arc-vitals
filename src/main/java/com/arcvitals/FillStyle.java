@@ -19,34 +19,34 @@ public enum FillStyle {
 
     SMOOTH("Smooth") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
-            g.setPaint(base);
+            g.setPaint(ctx.base);
             g.fill(geo.fillRegion(0.0, frac, dir));
         }
     },
 
     GLOSS("Glossy") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
             Area region = geo.fillRegion(0.0, frac, dir);
-            g.setPaint(base);
+            g.setPaint(ctx.base);
             g.fill(region);
             Shape oldClip = g.getClip();
             Stroke oldStroke = g.getStroke();
             g.clip(region);
             int t = geo.thickness();
             Shape cl = geo.centerline();
-            strokeCenterline(g, cl, t * 0.82f, color);
-            strokeCenterline(g, cl, t * 0.5f, BarColors.lighten(color, 0.26));
-            strokeCenterline(g, cl, t * 0.24f, BarColors.lighten(color, 0.6));
+            strokeCenterline(g, cl, t * 0.82f, ctx.color);
+            strokeCenterline(g, cl, t * 0.5f, BarColors.lighten(ctx.color, 0.26));
+            strokeCenterline(g, cl, t * 0.24f, BarColors.lighten(ctx.color, 0.6));
             g.setStroke(oldStroke);
             g.setClip(oldClip);
         }
@@ -54,17 +54,17 @@ public enum FillStyle {
 
     GRADIENT("Gradient") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
             double[] anchor = geo.pointAt(dir == FillDirection.BOTTOM_UP ? 0.0 : 1.0);
             double[] far = geo.pointAt(dir == FillDirection.BOTTOM_UP ? 1.0 : 0.0);
-            Color bright = BarColors.lighten(color, 0.35);
-            Color dark = BarColors.scale(color, 0.5);
+            Color bright = BarColors.lighten(ctx.color, 0.35);
+            Color dark = BarColors.scale(ctx.color, 0.5);
             if (Math.hypot(anchor[0] - far[0], anchor[1] - far[1]) < 1.0) {
-                g.setPaint(base);
+                g.setPaint(ctx.base);
                 g.fill(geo.fillRegion(0.0, frac, dir));
                 return;
             }
@@ -78,13 +78,13 @@ public enum FillStyle {
 
     SEGMENTED("Segmented") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
-            g.setPaint(base);
-            int segs = 14;
+            g.setPaint(ctx.base);
+            int segs = ctx.segments;
             double cell = 1.0 / segs;
             double onFrac = 0.72; // fraction of each cell that is a pip; the rest is a gap
             for (int i = 0; i < segs; i++) {
@@ -102,13 +102,13 @@ public enum FillStyle {
 
     GLOW("Glow") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
             Area region = geo.fillRegion(0.0, frac, dir);
-            g.setPaint(base);
+            g.setPaint(ctx.base);
             g.fill(region);
             Shape oldClip = g.getClip();
             Stroke oldStroke = g.getStroke();
@@ -116,9 +116,9 @@ public enum FillStyle {
             g.clip(region);
             Shape cl = geo.centerline();
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
-            strokeCenterline(g, cl, geo.thickness() * 1.3f, color);
+            strokeCenterline(g, cl, geo.thickness() * 1.3f, ctx.color);
             g.setComposite(oldComposite);
-            strokeCenterline(g, cl, geo.thickness() * 0.4f, BarColors.lighten(color, 0.55));
+            strokeCenterline(g, cl, geo.thickness() * 0.4f, BarColors.lighten(ctx.color, 0.55));
             g.setStroke(oldStroke);
             g.setClip(oldClip);
         }
@@ -126,18 +126,18 @@ public enum FillStyle {
 
     NOTCHED("Notched") {
         @Override
-        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color) {
+        void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx) {
             double frac = BarColors.clamp01(fraction);
             if (frac <= 0.0) {
                 return;
             }
             Area region = geo.fillRegion(0.0, frac, dir);
-            g.setPaint(base);
+            g.setPaint(ctx.base);
             g.fill(region);
             Shape oldClip = g.getClip();
             Stroke oldStroke = g.getStroke();
             g.clip(region);
-            g.setColor(BarColors.scale(color, 0.25));
+            g.setColor(BarColors.scale(ctx.color, 0.25));
             g.setStroke(new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
             double t = geo.thickness();
             for (double f : new double[]{0.25, 0.5, 0.75}) {
@@ -158,7 +158,7 @@ public enum FillStyle {
         this.label = label;
     }
 
-    abstract void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, Paint base, Color color);
+    abstract void paint(Graphics2D g, Geometry geo, FillDirection dir, double fraction, FillContext ctx);
 
     @Override
     public String toString() {

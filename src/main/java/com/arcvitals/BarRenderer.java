@@ -3,6 +3,7 @@ package com.arcvitals;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 
@@ -15,7 +16,7 @@ final class BarRenderer {
     }
 
     static void draw(Graphics2D g, Geometry geo, FillStyle style, FillDirection dir, double fraction,
-                     Color fill, Color track, Color outlineColor, int outlineWidth,
+                     Paint base, Color color, int segments, Color track, Color outlineColor, int outlineWidth,
                      double previewFraction, Color previewColor) {
         Object oldAa = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         Stroke oldStroke = g.getStroke();
@@ -26,7 +27,7 @@ final class BarRenderer {
         g.fill(geo.body());
 
         double frac = BarColors.clamp01(fraction);
-        style.paint(g, geo, dir, frac, fill, fill);
+        style.paint(g, geo, dir, frac, new FillContext(base, color, segments));
 
         // Preview: from the current level up to the projected level.
         double prev = BarColors.clamp01(previewFraction);
