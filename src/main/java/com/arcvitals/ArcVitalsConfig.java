@@ -108,7 +108,7 @@ public interface ArcVitalsConfig extends Config {
         return 14;
     }
 
-    @ConfigItem(keyName = "barPattern", name = "Bar pattern", description = "Material texture painted under each bar's fill.", section = layoutSection, position = 11)
+    @ConfigItem(keyName = "barPattern", name = "Bar pattern", description = "Material texture painted under each bar's fill. Not shown under the Gradient fill style.", section = layoutSection, position = 11)
     default BarPattern barPattern() {
         return BarPattern.NONE;
     }

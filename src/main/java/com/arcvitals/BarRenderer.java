@@ -8,8 +8,8 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 
 // Draws one bar: track, then the fill style over the fill region, then the restore preview, then
-// the outline. The Phase-2 pattern axis will feed a tinted Paint into style.paint; today it is the
-// solid fill colour.
+// the outline. The resolved base Paint (a solid colour, or a tinted pattern texture) is fed into
+// style.paint via the FillContext.
 final class BarRenderer {
 
     private BarRenderer() {

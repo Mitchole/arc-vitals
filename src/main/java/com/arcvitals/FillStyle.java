@@ -6,15 +6,14 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
-import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 
-// The fill-style axis: how the filled portion of a bar is painted. Public because it is a
-// config return type. `base` is the base fill Paint (a solid colour in Phase 1; a tinted texture
-// once patterns land) and `color` is the bar's solid colour, used to derive highlights.
+// The fill-style axis: how the filled portion of a bar is painted. Public because it is a config
+// return type. Inputs arrive in a FillContext: `ctx.base` is the base fill Paint (a solid colour,
+// or a tinted pattern texture) and `ctx.color` is the bar's solid colour, used to derive highlights.
 public enum FillStyle {
 
     SMOOTH("Smooth") {
