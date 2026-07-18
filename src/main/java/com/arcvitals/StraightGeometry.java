@@ -16,6 +16,9 @@ final class StraightGeometry implements Geometry {
     private final int thickness;
     private final Shape body;
 
+    // The body outline as an Area, flattened once on first fill and reused thereafter (see fillRegion).
+    private Area cachedBodyArea;
+
     StraightGeometry(int cx, int cy, int size, int thickness, int baseGap, int spacing,
                      int index, boolean leftSide, boolean flatEnds) {
         this.centerX = leftSide
@@ -83,9 +86,17 @@ final class StraightGeometry implements Geometry {
             }
         }
         Rectangle2D band = new Rectangle2D.Double(centerX - thickness, loY, thickness * 2.0, hiY - loY);
-        Area area = new Area(body);
-        area.intersect(new Area(band));
+        Area area = new Area(band);
+        area.intersect(bodyArea());
         return area;
+    }
+
+    // The cached body Area, never mutated (callers intersect a fresh band Area against it).
+    private Area bodyArea() {
+        if (cachedBodyArea == null) {
+            cachedBodyArea = new Area(body);
+        }
+        return cachedBodyArea;
     }
 
     @Override

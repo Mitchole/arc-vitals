@@ -5,13 +5,11 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 
-// Shared base for the curved bar geometries introduced in Phase 3 (Tapered and Ring). It owns the
-// angular-wedge fill maths and the arc-derived centreline / point / normal, all of which are
-// identical between those two shapes. Subclasses supply only their own body() outline and set the
-// shared circle fields via the constructor. ArcGeometry deliberately does NOT extend this: the spec
-// freezes ArcGeometry to guarantee byte-identical curved-shape output, so it keeps its own copy.
-// Angles are Arc2D degrees (0 = east, positive counterclockwise on screen); f = 0 is the bottom tip
-// and f = 1 the top tip, independent of fill direction.
+// Shared base for the curved bar geometries (Arc, Tapered, Ring). It owns the angular-wedge fill
+// maths and the arc-derived centreline / point / normal, all of which are identical across those
+// shapes. Subclasses supply only their own body() outline and set the shared circle fields via the
+// constructor. Angles are Arc2D degrees (0 = east, positive counterclockwise on screen); f = 0 is
+// the bottom tip and f = 1 the top tip, independent of fill direction.
 abstract class CurvedGeometry implements Geometry {
 
     final double centerX;
@@ -20,6 +18,10 @@ abstract class CurvedGeometry implements Geometry {
     final int thickness;
     final double topAngle;
     final double bottomAngle;
+
+    // The body outline as an Area, flattened once on first fill and reused thereafter. body() is
+    // immutable and the geometry is cached across frames, so the intersection target never changes.
+    private Area cachedBodyArea;
 
     CurvedGeometry(double centerX, double centerY, double radius, int thickness,
                    double topAngle, double bottomAngle) {
@@ -79,9 +81,17 @@ abstract class CurvedGeometry implements Geometry {
         double r = radius + thickness; // safely beyond the body's outer edge
         Arc2D wedge = new Arc2D.Double(centerX - r, centerY - r, r * 2.0, r * 2.0,
             startDeg, endDeg - startDeg, Arc2D.PIE);
-        Area area = new Area(body());
-        area.intersect(new Area(wedge));
+        Area area = new Area(wedge);
+        area.intersect(bodyArea());
         return area;
+    }
+
+    // The cached body Area, never mutated (callers intersect a fresh wedge Area against it).
+    private Area bodyArea() {
+        if (cachedBodyArea == null) {
+            cachedBodyArea = new Area(body());
+        }
+        return cachedBodyArea;
     }
 
     @Override
