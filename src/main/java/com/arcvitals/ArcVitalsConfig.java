@@ -119,6 +119,11 @@ public interface ArcVitalsConfig extends Config {
         return BarPattern.NONE;
     }
 
+    @ConfigItem(keyName = "dragToMove", name = "Drag to move (hold Alt)", description = "Hold Alt and drag the HUD with the left mouse button to reposition it.", section = layoutSection, position = 12)
+    default boolean dragToMove() {
+        return true;
+    }
+
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;
