@@ -3,37 +3,26 @@ package com.arcvitals;
 // Per-bar fill-style choice. INHERIT falls back to the global fill style; every other value overrides it.
 // Public because it is a config return type.
 public enum FillStyleOverride {
-    INHERIT("Inherit"),
-    SMOOTH("Smooth"),
-    GLOSS("Glossy"),
-    GRADIENT("Gradient"),
-    SEGMENTED("Segmented"),
-    GLOW("Glow"),
-    NOTCHED("Notched");
+    INHERIT("Inherit", null),
+    SMOOTH("Smooth", FillStyle.SMOOTH),
+    GLOSS("Glossy", FillStyle.GLOSS),
+    GRADIENT("Gradient", FillStyle.GRADIENT),
+    SEGMENTED("Segmented", FillStyle.SEGMENTED),
+    GLOW("Glow", FillStyle.GLOW),
+    NOTCHED("Notched", FillStyle.NOTCHED);
 
     private final String label;
+    private final FillStyle target;
 
-    FillStyleOverride(String label) {
+    FillStyleOverride(String label, FillStyle target) {
         this.label = label;
+        this.target = target;
     }
 
+    // INHERIT carries a null target and falls back to the global fill style; every other value
+    // overrides it. The constant declaration is the whole mapping, so a new style cannot be half-added.
     FillStyle resolve(FillStyle global) {
-        switch (this) {
-            case SMOOTH:
-                return FillStyle.SMOOTH;
-            case GLOSS:
-                return FillStyle.GLOSS;
-            case GRADIENT:
-                return FillStyle.GRADIENT;
-            case SEGMENTED:
-                return FillStyle.SEGMENTED;
-            case GLOW:
-                return FillStyle.GLOW;
-            case NOTCHED:
-                return FillStyle.NOTCHED;
-            default:
-                return global;
-        }
+        return target != null ? target : global;
     }
 
     @Override
