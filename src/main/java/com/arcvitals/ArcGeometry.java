@@ -14,7 +14,13 @@ final class ArcGeometry extends CurvedGeometry {
 
     ArcGeometry(int cx, int cy, int size, int thickness, int baseGap, int spacing,
                 int curveDegrees, int index, boolean leftSide, boolean flatEnds) {
-        this(new ArcCenterline(cx, cy, size, thickness, baseGap, spacing, curveDegrees, index, leftSide),
+        this(cx, cy, size, thickness, baseGap, spacing, curveDegrees, index,
+            leftSide ? Orientation.LEFT : Orientation.RIGHT, flatEnds);
+    }
+
+    ArcGeometry(int cx, int cy, int size, int thickness, int baseGap, int spacing,
+                int curveDegrees, int index, Orientation orientation, boolean flatEnds) {
+        this(new ArcCenterline(cx, cy, size, thickness, baseGap, spacing, curveDegrees, index, orientation),
             thickness, flatEnds);
     }
 

@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -52,6 +53,22 @@ public class ArcGeometryTest {
         Area a = left().fillRegion(0.0, 0.35, FillDirection.TOP_DOWN);
         assertTrue("top tip filled", contains(a, left().pointAt(0.95)));
         assertFalse("bottom tip empty", contains(a, left().pointAt(0.05)));
+    }
+
+    @Test
+    public void topOrientationBodySitsAboveCentre() {
+        ArcGeometry top = new ArcGeometry(200, 200, 150, 12, 88, 7, 120, 0, Orientation.TOP, true);
+        java.awt.Rectangle b = top.body().getBounds();
+        // A TOP crescent bows upward, so its whole body is above the centre y.
+        assertTrue("top of body should be above centre", b.y < 200);
+        assertTrue("bottom of body should be at or above centre", b.y + b.height <= 200 + 12);
+    }
+
+    @Test
+    public void leftOrientationMatchesLeftSideBoolean() {
+        ArcGeometry viaBool = new ArcGeometry(200, 200, 150, 12, 88, 7, 120, 0, true, true);
+        ArcGeometry viaEnum = new ArcGeometry(200, 200, 150, 12, 88, 7, 120, 0, Orientation.LEFT, true);
+        assertEquals(viaBool.body().getBounds(), viaEnum.body().getBounds());
     }
 
     // ---- helpers ----
