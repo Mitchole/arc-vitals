@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.MenuEntry;
@@ -31,6 +32,7 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.util.Text;
 
 public class ArcVitalsOverlay extends Overlay {
 
@@ -40,6 +42,7 @@ public class ArcVitalsOverlay extends Overlay {
     private final CombatTracker combatTracker;
     private final SpriteManager spriteManager;
     private final HudDragController dragController;
+    private final TargetTracker targetTracker;
 
     private static final Vital[] VITALS = Vital.values();
     private static final Prayer[] PRAYERS = Prayer.values();
@@ -85,15 +88,22 @@ public class ArcVitalsOverlay extends Overlay {
     // off into the per-frame bounds map.
     private Rectangle accum;
 
+    // Eased displayed fill for the target bar (null = snap on next draw), plus the actor it was last
+    // drawn for so a target switch snaps rather than glides.
+    private Double displayedTargetFraction;
+    private Actor lastTargetActor;
+
     @Inject
     ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
-                     CombatTracker combatTracker, SpriteManager spriteManager, HudDragController dragController) {
+                     CombatTracker combatTracker, SpriteManager spriteManager, HudDragController dragController,
+                     TargetTracker targetTracker) {
         this.client = client;
         this.config = config;
         this.itemStatService = itemStatService;
         this.combatTracker = combatTracker;
         this.spriteManager = spriteManager;
         this.dragController = dragController;
+        this.targetTracker = targetTracker;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.UNDER_WIDGETS);
     }
@@ -103,6 +113,7 @@ public class ArcVitalsOverlay extends Overlay {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
             dragController.setTargets(Collections.emptyList());
             displayed.clear();
+            displayedTargetFraction = null;
             lastFrameNanos = 0L;
             return null;
         }
@@ -111,6 +122,7 @@ public class ArcVitalsOverlay extends Overlay {
         if (visibility == Visibility.HIDDEN) {
             dragController.setTargets(Collections.emptyList());
             displayed.clear();
+            displayedTargetFraction = null;
             lastFrameNanos = 0L;
             return null;
         }
@@ -132,9 +144,14 @@ public class ArcVitalsOverlay extends Overlay {
                 anyLow = true;
             }
         }
-        if (states.isEmpty()) {
+        Actor targetActor = config.targetBarEnabled() ? targetTracker.current() : null;
+        boolean targetBarShowing = targetActor != null && targetActor.getName() != null
+            && TargetHealth.visible(targetActor.getHealthScale());
+
+        if (states.isEmpty() && !targetBarShowing) {
             dragController.setTargets(Collections.emptyList());
             displayed.clear();
+            displayedTargetFraction = null;
             lastFrameNanos = 0L;
             return null;
         }
@@ -168,6 +185,7 @@ public class ArcVitalsOverlay extends Overlay {
         }
 
         drawDetachedBars(g, anyLow, hovered, hpStatus, dtMillis, frameBounds);
+        drawTargetBar(g, targetActor, dtMillis, frameBounds);
 
         List<DragTarget> targets = new ArrayList<>();
         Rectangle main = frameBounds.get("main");
@@ -185,6 +203,11 @@ public class ArcVitalsOverlay extends Overlay {
             }
             targets.add(new DragTarget(v.name(), b, v.detachX(config), v.detachY(config),
                 DETACH_OFFSET_MIN, DETACH_OFFSET_MAX, v.detachKeyX(), v.detachKeyY()));
+        }
+        Rectangle tb = frameBounds.get("target");
+        if (tb != null) {
+            targets.add(new DragTarget("target", tb, config.targetBarOffsetX(), config.targetBarOffsetY(),
+                DETACH_OFFSET_MIN, DETACH_OFFSET_MAX, "targetBarOffsetX", "targetBarOffsetY"));
         }
         dragController.setTargets(targets);
 
@@ -270,6 +293,97 @@ public class ArcVitalsOverlay extends Overlay {
                 frameBounds.put(v.name(), accum);
             }
         }
+    }
+
+    // Draws the current combat target's HP as a lone bar at its own centre (uncached, index 0),
+    // recording its bounds under "target" so it becomes an Alt-draggable DragTarget. Reuses the shared
+    // geometry, pattern, fill, and label primitives; it has no alert/warn/poison/restore behaviour and
+    // draws at the resting base opacity. Bails (and snaps next time) when there is no valid target.
+    private void drawTargetBar(Graphics2D g, Actor targetActor, long dtMillis, Map<String, Rectangle> frameBounds) {
+        int scale = targetActor == null ? 0 : targetActor.getHealthScale();
+        String rawName = targetActor == null ? null : targetActor.getName();
+        if (targetActor == null || rawName == null || !TargetHealth.visible(scale)) {
+            lastTargetActor = null;
+            displayedTargetFraction = null;
+            return;
+        }
+        int ratio = targetActor.getHealthRatio();
+        double fraction = TargetHealth.fraction(ratio, scale);
+        int percent = TargetHealth.percent(ratio, scale);
+        String name = Text.removeTags(rawName);
+
+        // Snap (do not glide) when the target changes.
+        if (targetActor != lastTargetActor) {
+            displayedTargetFraction = null;
+        }
+        lastTargetActor = targetActor;
+
+        int tcx = targetCentreX();
+        int tcy = targetCentreY();
+        boolean leftSide = config.targetBarSide() == Side.LEFT;
+        BarShape shape = config.targetBarShapeOverride().resolve(config.barShape());
+        Color fill = config.targetBarColor();
+        Color outline = config.showOutline() ? config.outlineColor() : null;
+
+        Composite oldComposite = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
+
+        accum = null;
+        Geometry geo = shape.build(tcx, tcy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+            config.curve(), 0, leftSide, config.flatEnds());
+        addBounds(geo.body().getBounds());
+        Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
+        double shown = animatedTargetFraction(fraction, dtMillis);
+        BarRenderer.draw(g, geo, config.fillStyle(), config.fillDirection(), shown, basePaint, fill,
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+
+        String txt = config.targetBarLabel().format(name, percent);
+        if (!txt.isEmpty()) {
+            g.setFont(FontManager.getRunescapeSmallFont());
+            FontMetrics fm = g.getFontMetrics();
+            int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), 0);
+            int[] anchor = BarLayout.labelAnchor(shape, tcx, tcy, config.size(), gap, config.thickness(),
+                0, fm.getHeight(), leftSide);
+            int tx = anchor[0] - fm.stringWidth(txt) / 2;
+            int ty = anchor[1];
+            g.setColor(Color.BLACK);
+            g.drawString(txt, tx + 1, ty + 1);
+            g.setColor(fill);
+            g.drawString(txt, tx, ty);
+        }
+
+        g.setComposite(oldComposite);
+
+        if (accum != null) {
+            frameBounds.put("target", accum);
+        }
+    }
+
+    // Centre for the target bar: viewport centre plus its own offset (or the live drag offset while it
+    // is the bar being dragged).
+    private int targetCentreX() {
+        int offset = dragController.isDragging("target") ? dragController.liveOffsetX() : config.targetBarOffsetX();
+        return viewportCentreX() + offset;
+    }
+
+    private int targetCentreY() {
+        int offset = dragController.isDragging("target") ? dragController.liveOffsetY() : config.targetBarOffsetY();
+        return viewportCentreY() + offset;
+    }
+
+    // Eases the target bar's displayed fill toward the real fraction, mirroring the vitals' animation:
+    // first sight or animation-off snaps; a drop uses drainGlideMs, a gain uses restoreGlideMs.
+    private double animatedTargetFraction(double target, long dtMillis) {
+        Double prev = displayedTargetFraction;
+        double shown;
+        if (prev == null || !config.smoothMotion()) {
+            shown = target;
+        } else {
+            int glide = target < prev ? config.drainGlideMs() : config.restoreGlideMs();
+            shown = BarAnimator.step(prev, target, dtMillis, glide);
+        }
+        displayedTargetFraction = shown;
+        return shown;
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,

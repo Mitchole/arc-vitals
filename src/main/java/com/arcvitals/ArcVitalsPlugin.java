@@ -7,7 +7,9 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.InteractingChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
@@ -43,6 +45,9 @@ public class ArcVitalsPlugin extends Plugin {
     @Inject
     private ArcVitalsMouseListener mouseListener;
 
+    @Inject
+    private TargetTracker targetTracker;
+
     @Provides
     ArcVitalsConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(ArcVitalsConfig.class);
@@ -73,9 +78,23 @@ public class ArcVitalsPlugin extends Plugin {
     }
 
     @Subscribe
+    public void onInteractingChanged(InteractingChanged event) {
+        if (event.getSource() == client.getLocalPlayer()) {
+            targetTracker.onInteracting(event.getTarget(), client.getTickCount());
+        }
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick event) {
+        Player local = client.getLocalPlayer();
+        targetTracker.onGameTick(local == null ? null : local.getInteracting(), client.getTickCount());
+    }
+
+    @Subscribe
     public void onGameStateChanged(GameStateChanged event) {
         if (event.getGameState() == GameState.LOGIN_SCREEN) {
             combatTracker.reset();
+            targetTracker.reset();
         }
     }
 }
