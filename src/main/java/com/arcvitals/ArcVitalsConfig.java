@@ -30,19 +30,22 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Prayer icons", description = "Icons for the prayers you have active", position = 5)
     String prayerIconsSection = "prayerIcons";
 
-    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 6)
+    @ConfigSection(name = "Target bar", description = "A bar for your current combat target", position = 6)
+    String targetBarSection = "targetBar";
+
+    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 7)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 7)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 8)
     String animationSection = "animation";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 8)
+    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 9)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 9)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 10)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 10, closedByDefault = true)
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 11, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -404,6 +407,46 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "prayerIconBackgroundColor", name = "Icon background colour", description = "Colour of the chip drawn behind the icon row.", section = prayerIconsSection, position = 5)
     default Color prayerIconBackgroundColor() {
         return new Color(0, 0, 0, 130);
+    }
+
+    @ConfigItem(keyName = "targetBarEnabled", name = "Show target bar", description = "Show a bar for the hitpoints of your current combat target.", section = targetBarSection, position = 0)
+    default boolean targetBarEnabled() {
+        return false;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "targetBarColor", name = "Target bar colour", description = "Fill colour of the target bar.", section = targetBarSection, position = 1)
+    default Color targetBarColor() {
+        return new Color(200, 40, 40);
+    }
+
+    @ConfigItem(keyName = "targetBarLabel", name = "Label", description = "What the target bar's label shows.", section = targetBarSection, position = 2)
+    default TargetLabel targetBarLabel() {
+        return TargetLabel.NAME_AND_PERCENT;
+    }
+
+    @ConfigItem(keyName = "targetBarSide", name = "Bow direction", description = "Which way a curved target bar bows.", section = targetBarSection, position = 3)
+    default Side targetBarSide() {
+        return Side.RIGHT;
+    }
+
+    @ConfigItem(keyName = "targetBarShapeOverride", name = "Shape", description = "Shape for the target bar. Inherit uses the global bar shape.", section = targetBarSection, position = 4)
+    default ShapeOverride targetBarShapeOverride() {
+        return ShapeOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "targetBarOffsetX", name = "Position X", description = "Horizontal position of the target bar, measured from screen centre.", section = targetBarSection, position = 5)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int targetBarOffsetX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "targetBarOffsetY", name = "Position Y", description = "Vertical position of the target bar, measured from screen centre.", section = targetBarSection, position = 6)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int targetBarOffsetY() {
+        return -220;
     }
 
     @Alpha
