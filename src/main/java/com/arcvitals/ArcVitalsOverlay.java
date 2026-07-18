@@ -59,6 +59,12 @@ public class ArcVitalsOverlay extends Overlay {
     // render, so no synchronisation is needed.
     private final Map<Integer, BufferedImage> spriteCache = new HashMap<>();
 
+    // The active prayer sprite ids, recomputed only when the game tick advances: prayer state is
+    // tick-driven, but render runs every frame, so scanning every prayer per frame is wasted work.
+    // clearAndReturn resets the tick so the next drawn frame recomputes rather than trusting a stale list.
+    private List<Integer> prayerSpriteIds = Collections.emptyList();
+    private int prayerSpriteTick = Integer.MIN_VALUE;
+
     private final Map<Long, Geometry> geometryCache = new HashMap<>();
     private final PatternPaints patternPaints = new PatternPaints();
     private int cacheCx = Integer.MIN_VALUE;
@@ -111,20 +117,12 @@ public class ArcVitalsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D g) {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
-            dragController.setTargets(Collections.emptyList());
-            displayed.clear();
-            displayedTargetFraction = null;
-            lastFrameNanos = 0L;
-            return null;
+            return clearAndReturn();
         }
         boolean debug = config.debugEnabled();
         Visibility visibility = debug ? Visibility.FULL : resolveVisibility();
         if (visibility == Visibility.HIDDEN) {
-            dragController.setTargets(Collections.emptyList());
-            displayed.clear();
-            displayedTargetFraction = null;
-            lastFrameNanos = 0L;
-            return null;
+            return clearAndReturn();
         }
 
         states.clear();
@@ -149,11 +147,7 @@ public class ArcVitalsOverlay extends Overlay {
             && TargetHealth.visible(targetActor.getHealthScale());
 
         if (states.isEmpty() && !targetBarShowing) {
-            dragController.setTargets(Collections.emptyList());
-            displayed.clear();
-            displayedTargetFraction = null;
-            lastFrameNanos = 0L;
-            return null;
+            return clearAndReturn();
         }
 
         long now = System.nanoTime();
@@ -221,12 +215,29 @@ public class ArcVitalsOverlay extends Overlay {
         return null;
     }
 
+    // Draws nothing this frame: drops the published drag targets and clears the eased fill state so a
+    // bar that reappears later snaps to its real value instead of sweeping from a stale one. Returns
+    // null for render() to hand straight back.
+    private Dimension clearAndReturn() {
+        dragController.setTargets(Collections.emptyList());
+        displayed.clear();
+        displayedTargetFraction = null;
+        lastFrameNanos = 0L;
+        prayerSpriteTick = Integer.MIN_VALUE;
+        return null;
+    }
+
     // Draws a centred row of icons for the currently-active prayers at the bottom of the HUD. The row
     // anchors to the arc bottom (cy + size/2) plus the offset slider, draws at the resting base opacity,
     // and reserves a slot per active prayer so positions stay put while sprites stream in. Sprites load
     // asynchronously; a slot whose sprite has not arrived yet is skipped and fills in on a later frame.
     private void drawPrayerIcons(Graphics2D g, int cx, int cy) {
-        List<Integer> spriteIds = PrayerIcon.activeSpriteIds(client);
+        int tick = client.getTickCount();
+        if (tick != prayerSpriteTick) {
+            prayerSpriteIds = PrayerIcon.activeSpriteIds(client);
+            prayerSpriteTick = tick;
+        }
+        List<Integer> spriteIds = prayerSpriteIds;
         if (spriteIds.isEmpty()) {
             return;
         }
@@ -337,20 +348,8 @@ public class ArcVitalsOverlay extends Overlay {
         BarRenderer.draw(g, geo, config.fillStyle(), config.fillDirection(), shown, basePaint, fill,
             config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
 
-        String txt = config.targetBarLabel().format(name, percent);
-        if (!txt.isEmpty()) {
-            g.setFont(FontManager.getRunescapeSmallFont());
-            FontMetrics fm = g.getFontMetrics();
-            int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), 0);
-            int[] anchor = BarLayout.labelAnchor(shape, tcx, tcy, config.size(), gap, config.thickness(),
-                0, fm.getHeight(), leftSide);
-            int tx = anchor[0] - fm.stringWidth(txt) / 2;
-            int ty = anchor[1];
-            g.setColor(Color.BLACK);
-            g.drawString(txt, tx + 1, ty + 1);
-            g.setColor(fill);
-            g.drawString(txt, tx, ty);
-        }
+        int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), 0);
+        drawLabel(g, config.targetBarLabel().format(name, percent), shape, tcx, tcy, gap, 0, leftSide, fill);
 
         g.setComposite(oldComposite);
 
@@ -427,21 +426,28 @@ public class ArcVitalsOverlay extends Overlay {
         BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), shown, basePaint, fill,
             config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
 
-        String txt = ValueText.format(current, max, config.valueDisplay());
-        if (!txt.isEmpty()) {
-            g.setFont(FontManager.getRunescapeSmallFont());
-            FontMetrics fm = g.getFontMetrics();
-            int[] anchor = BarLayout.labelAnchor(shape, cx, cy, config.size(), gap, config.thickness(),
-                index, fm.getHeight(), leftSide);
-            int tx = anchor[0] - fm.stringWidth(txt) / 2;
-            int ty = anchor[1];
-            g.setColor(Color.BLACK);
-            g.drawString(txt, tx + 1, ty + 1);
-            g.setColor(fill);
-            g.drawString(txt, tx, ty);
-        }
+        drawLabel(g, ValueText.format(current, max, config.valueDisplay()), shape, cx, cy, gap, index, leftSide, fill);
 
         g.setComposite(oldComposite);
+    }
+
+    // Draws a bar's value text centred on its label anchor, with a one-pixel black drop shadow.
+    // A blank string draws nothing. Shared by the vitals, detached bars, and the target bar.
+    private void drawLabel(Graphics2D g, String txt, BarShape shape, int cx, int cy, int gap,
+                           int index, boolean leftSide, Color fill) {
+        if (txt.isEmpty()) {
+            return;
+        }
+        g.setFont(FontManager.getRunescapeSmallFont());
+        FontMetrics fm = g.getFontMetrics();
+        int[] anchor = BarLayout.labelAnchor(shape, cx, cy, config.size(), gap, config.thickness(),
+            index, fm.getHeight(), leftSide);
+        int tx = anchor[0] - fm.stringWidth(txt) / 2;
+        int ty = anchor[1];
+        g.setColor(Color.BLACK);
+        g.drawString(txt, tx + 1, ty + 1);
+        g.setColor(fill);
+        g.drawString(txt, tx, ty);
     }
 
     // Eases the drawn fill fraction toward the real one. First sighting of a vital (or animation off)
