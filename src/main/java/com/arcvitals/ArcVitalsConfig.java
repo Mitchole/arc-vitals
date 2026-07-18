@@ -27,19 +27,22 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Run energy bar", description = "Run energy bar", position = 4)
     String runSection = "runBar";
 
-    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 5)
+    @ConfigSection(name = "Prayer icons", description = "Icons for the prayers you have active", position = 5)
+    String prayerIconsSection = "prayerIcons";
+
+    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 6)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 6)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 7)
     String animationSection = "animation";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 7)
+    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 8)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 8)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 9)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 9, closedByDefault = true)
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 10, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -283,6 +286,43 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "runPatternOverride", name = "Run energy pattern", description = "Pattern for the Run energy bar. Inherit uses the global bar pattern.", section = runSection, position = 6)
     default PatternOverride runPatternOverride() {
         return PatternOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "showPrayerIcons", name = "Show prayer icons", description = "Show icons for the prayers you currently have active, centred under the HUD.", section = prayerIconsSection, position = 0)
+    default boolean showPrayerIcons() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "prayerIconSize", name = "Icon size", description = "Width and height of each prayer icon.", section = prayerIconsSection, position = 1)
+    @Range(min = 12, max = 48)
+    @Units(Units.PIXELS)
+    default int prayerIconSize() {
+        return 24;
+    }
+
+    @ConfigItem(keyName = "prayerIconOffset", name = "Vertical offset", description = "Move the icon row up or down from the bottom of the bars.", section = prayerIconsSection, position = 2)
+    @Range(min = -100, max = 300)
+    @Units(Units.PIXELS)
+    default int prayerIconOffset() {
+        return 6;
+    }
+
+    @ConfigItem(keyName = "prayerIconSpacing", name = "Icon spacing", description = "Gap between the prayer icons.", section = prayerIconsSection, position = 3)
+    @Range(min = 0, max = 20)
+    @Units(Units.PIXELS)
+    default int prayerIconSpacing() {
+        return 2;
+    }
+
+    @ConfigItem(keyName = "prayerIconBackground", name = "Icon background", description = "Draw a background chip behind the icon row.", section = prayerIconsSection, position = 4)
+    default boolean prayerIconBackground() {
+        return false;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "prayerIconBackgroundColor", name = "Icon background colour", description = "Colour of the chip drawn behind the icon row.", section = prayerIconsSection, position = 5)
+    default Color prayerIconBackgroundColor() {
+        return new Color(0, 0, 0, 130);
     }
 
     @Alpha
