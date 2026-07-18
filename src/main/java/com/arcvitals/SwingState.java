@@ -6,6 +6,8 @@ package com.arcvitals;
 // AWT, no Client.
 final class SwingState {
 
+    private static final long MS_PER_TICK = 600;
+
     private SwingState() {
     }
 
@@ -16,12 +18,12 @@ final class SwingState {
         if (elapsedMs <= 0) {
             return 0.0;
         }
-        double f = elapsedMs / (cooldownTicks * 600.0);
+        double f = elapsedMs / (cooldownTicks * (double) MS_PER_TICK);
         return f > 1.0 ? 1.0 : f;
     }
 
     static boolean ready(long elapsedMs, int cooldownTicks) {
-        return elapsedMs >= cooldownTicks * 600L;
+        return elapsedMs >= cooldownTicks * MS_PER_TICK;
     }
 
     static boolean showing(int currentTick, int lastSwingTick, int lingerTicks) {

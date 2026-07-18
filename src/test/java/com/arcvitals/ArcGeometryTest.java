@@ -71,6 +71,14 @@ public class ArcGeometryTest {
         assertEquals(viaBool.body().getBounds(), viaEnum.body().getBounds());
     }
 
+    @Test
+    public void topAndBottomFillLeftToRight() {
+        ArcGeometry top = new ArcGeometry(200, 200, 150, 12, 88, 7, 120, 0, Orientation.TOP, true);
+        assertTrue("TOP fills left->right", top.pointAt(0.0)[0] < top.pointAt(1.0)[0]);
+        ArcGeometry bottom = new ArcGeometry(200, 200, 150, 12, 88, 7, 120, 0, Orientation.BOTTOM, true);
+        assertTrue("BOTTOM fills left->right", bottom.pointAt(0.0)[0] < bottom.pointAt(1.0)[0]);
+    }
+
     // ---- helpers ----
 
     private static boolean contains(Area a, double[] p) {

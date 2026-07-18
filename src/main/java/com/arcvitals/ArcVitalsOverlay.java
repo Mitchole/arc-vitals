@@ -431,14 +431,6 @@ public class ArcVitalsOverlay extends Overlay {
         int scy = swingCentreY();
         Orientation orientation = placement == SwingPlacement.TOP ? Orientation.TOP : Orientation.BOTTOM;
 
-        long now = System.nanoTime();
-        double target = swingTracker.fraction(now);
-        boolean ready = swingTracker.ready(now);
-        double shown = animatedSwingFraction(target, dtMillis);
-
-        Color fill = config.swingColor();
-        Color outline = config.showOutline() ? config.outlineColor() : null;
-
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
 
@@ -446,16 +438,7 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = new ArcGeometry(scx, scy, config.size(), config.thickness(), config.gap(),
             config.barSpacing(), config.curve(), 0, orientation, config.flatEnds());
         addBounds(geo.body().getBounds());
-        Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
-        BarRenderer.draw(g, geo, config.fillStyle(), FillDirection.BOTTOM_UP, shown, basePaint, fill,
-            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
-
-        if (config.showSwingTicks()) {
-            drawSwingTicks(g, geo, swingTracker.cooldownTicks());
-        }
-        if (ready) {
-            drawSwingReadyGlow(g, geo);
-        }
+        drawSwingArc(g, geo, dtMillis);
 
         g.setComposite(oldComposite);
         if (accum != null) {
@@ -466,14 +449,6 @@ public class ArcVitalsOverlay extends Overlay {
     // Draws the swing timer as an extra bar nested after the vitals on its side, sharing the main
     // centre and the "main" drag (no separate DragTarget). Left/right orientation, its own index.
     private void drawSwingNested(Graphics2D g, int cx, int cy, boolean leftSide, int index, long dtMillis) {
-        long now = System.nanoTime();
-        double target = swingTracker.fraction(now);
-        boolean ready = swingTracker.ready(now);
-        double shown = animatedSwingFraction(target, dtMillis);
-
-        Color fill = config.swingColor();
-        Color outline = config.showOutline() ? config.outlineColor() : null;
-
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
 
@@ -481,16 +456,8 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = new ArcGeometry(cx, cy, config.size(), config.thickness(), config.gap(),
             config.barSpacing(), config.curve(), index, orientation, config.flatEnds());
         addBounds(geo.body().getBounds()); // folds into the "main" bounds accumulator for this frame
-        Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
-        BarRenderer.draw(g, geo, config.fillStyle(), FillDirection.BOTTOM_UP, shown, basePaint, fill,
-            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+        drawSwingArc(g, geo, dtMillis);
 
-        if (config.showSwingTicks()) {
-            drawSwingTicks(g, geo, swingTracker.cooldownTicks());
-        }
-        if (ready) {
-            drawSwingReadyGlow(g, geo);
-        }
         g.setComposite(oldComposite);
     }
 
@@ -508,12 +475,55 @@ public class ArcVitalsOverlay extends Overlay {
         return shown;
     }
 
+    // Draws the fill, per-tick pips, the bright leading edge at the current fill front, and the ready
+    // glow. Callers own the composite, centre, and bounds; this only paints into the given geometry.
+    private void drawSwingArc(Graphics2D g, Geometry geo, long dtMillis) {
+        long now = System.nanoTime();
+        double target = swingTracker.fraction(now);
+        boolean ready = swingTracker.ready(now);
+        double shown = animatedSwingFraction(target, dtMillis);
+
+        Color fill = config.swingColor();
+        Color outline = config.showOutline() ? config.outlineColor() : null;
+        Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
+        BarRenderer.draw(g, geo, config.fillStyle(), FillDirection.BOTTOM_UP, shown, basePaint, fill,
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+
+        if (config.showSwingTicks()) {
+            drawSwingTicks(g, geo, swingTracker.cooldownTicks());
+        }
+        if (!ready && shown > 0.01) {
+            drawSwingLeadingEdge(g, geo, shown);
+        }
+        if (ready) {
+            drawSwingReadyGlow(g, geo);
+        }
+    }
+
+    // A bright marker across the bar at the current fill front, so "now" is unmistakable.
+    private void drawSwingLeadingEdge(Graphics2D g, Geometry geo, double f) {
+        double[] p = geo.pointAt(f);
+        double[] n = geo.normalAt(f);
+        int half = geo.thickness() / 2 + 1;
+        java.awt.Stroke oldStroke = g.getStroke();
+        Paint oldPaint = g.getPaint();
+        g.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setColor(new Color(255, 255, 255, 220));
+        g.draw(new java.awt.geom.Line2D.Double(
+            p[0] - n[0] * half, p[1] - n[1] * half,
+            p[0] + n[0] * half, p[1] + n[1] * half));
+        g.setStroke(oldStroke);
+        g.setPaint(oldPaint);
+    }
+
     // A notch across the bar at each tick boundary, reusing pointAt/normalAt like FillStyle.NOTCHED.
     private void drawSwingTicks(Graphics2D g, Geometry geo, int ticks) {
         if (ticks < 2) {
             return;
         }
         int half = geo.thickness() / 2 + 1;
+        java.awt.Stroke oldStroke = g.getStroke();
+        Paint oldPaint = g.getPaint();
         g.setColor(new Color(0, 0, 0, 160));
         g.setStroke(new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
         for (int i = 1; i < ticks; i++) {
@@ -524,16 +534,21 @@ public class ArcVitalsOverlay extends Overlay {
                 p[0] - n[0] * half, p[1] - n[1] * half,
                 p[0] + n[0] * half, p[1] + n[1] * half));
         }
+        g.setStroke(oldStroke);
+        g.setPaint(oldPaint);
     }
 
-    // A soft halo at the bar's belly when the next attack is available.
+    // A soft halo at the bar's belly when the next attack is available, tinted to match the swing colour.
     private void drawSwingReadyGlow(Graphics2D g, Geometry geo) {
         double[] belly = geo.pointAt(0.5);
         float r = config.size() * 0.4f;
+        Color base = config.swingColor();
+        Color inner = new Color(base.getRed(), base.getGreen(), base.getBlue(), 110);
+        Color outer = new Color(base.getRed(), base.getGreen(), base.getBlue(), 0);
         RadialGradientPaint halo = new RadialGradientPaint(
             new java.awt.geom.Point2D.Double(belly[0], belly[1]), r,
             new float[]{0f, 1f},
-            new Color[]{new Color(230, 245, 255, 90), new Color(230, 245, 255, 0)});
+            new Color[]{inner, outer});
         Paint old = g.getPaint();
         g.setPaint(halo);
         g.fill(new java.awt.geom.Ellipse2D.Double(belly[0] - r, belly[1] - r, r * 2, r * 2));

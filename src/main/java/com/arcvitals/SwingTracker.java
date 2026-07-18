@@ -37,14 +37,18 @@ public class SwingTracker {
     }
 
     double fraction(long nowNanos) {
-        return SwingState.fraction((nowNanos - swingNanos) / 1_000_000L, cooldownTicks);
+        return SwingState.fraction(elapsedMs(nowNanos), cooldownTicks);
     }
 
     boolean ready(long nowNanos) {
-        return SwingState.ready((nowNanos - swingNanos) / 1_000_000L, cooldownTicks);
+        return SwingState.ready(elapsedMs(nowNanos), cooldownTicks);
     }
 
     int cooldownTicks() {
         return cooldownTicks;
+    }
+
+    private long elapsedMs(long nowNanos) {
+        return (nowNanos - swingNanos) / 1_000_000L;
     }
 }

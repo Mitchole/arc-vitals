@@ -472,7 +472,7 @@ public interface ArcVitalsConfig extends Config {
         return SwingPlacement.TOP;
     }
 
-    @ConfigItem(keyName = "swingSide", name = "Nesting side / bow", description = "Which side the swing timer nests on (Nested placement).", section = swingSection, position = 3)
+    @ConfigItem(keyName = "swingSide", name = "Nesting side", description = "Which side the swing timer nests on, when Placement is Nested.", section = swingSection, position = 3)
     default Side swingSide() {
         return Side.LEFT;
     }

@@ -55,10 +55,11 @@ final class ArcCenterline {
                 circleCenterY = cy - baseGap + baseRadius;
                 break;
             case BOTTOM:
-            default:
                 centreAngle = 270.0;
                 circleCenterY = cy + baseGap - baseRadius;
                 break;
+            default:
+                throw new IllegalStateException("Unhandled orientation: " + orientation);
         }
         double start = centreAngle - (sweep / 2.0);
         double end = centreAngle + (sweep / 2.0);
@@ -84,10 +85,11 @@ final class ArcCenterline {
                 this.topAngle = start;    // right tip
                 break;
             case BOTTOM:
-            default:
                 this.bottomAngle = start; // left tip (lower-left)
                 this.topAngle = end;      // right tip
                 break;
+            default:
+                throw new IllegalStateException("Unhandled orientation: " + orientation);
         }
     }
 }
