@@ -7,9 +7,13 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -66,9 +70,15 @@ public class ArcVitalsOverlay extends Overlay {
     private static final int ICON_BG_PAD = 3;
     private static final Color DRAG_OUTLINE_COLOR = new Color(255, 150, 0);
 
-    // Union of everything drawn this frame, in canvas pixels. Reset at the top of the draw section,
-    // grown as each bar and the prayer-icon row are drawn, then published to the drag controller.
-    private java.awt.Rectangle hudBounds;
+    // Mirror the @Range on offsetX/offsetY in ArcVitalsConfig; the annotation values cannot be read
+    // at runtime without reflection (banned in src/main).
+    private static final int MAIN_OFFSET_MIN = -500;
+    private static final int MAIN_OFFSET_MAX = 500;
+
+    // Running union of the geometry drawn for the current unit, in canvas pixels. Reset to null
+    // before a unit is drawn, grown by addBounds as each bar and the prayer-icon row draw, then read
+    // off into the per-frame bounds map.
+    private Rectangle accum;
 
     @Inject
     ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
@@ -86,7 +96,7 @@ public class ArcVitalsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D g) {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
-            dragController.setBounds(null);
+            dragController.setTargets(Collections.emptyList());
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -94,7 +104,7 @@ public class ArcVitalsOverlay extends Overlay {
         boolean debug = config.debugEnabled();
         Visibility visibility = debug ? Visibility.FULL : resolveVisibility();
         if (visibility == Visibility.HIDDEN) {
-            dragController.setBounds(null);
+            dragController.setTargets(Collections.emptyList());
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -118,7 +128,7 @@ public class ArcVitalsOverlay extends Overlay {
             }
         }
         if (states.isEmpty()) {
-            dragController.setBounds(null);
+            dragController.setTargets(Collections.emptyList());
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -136,7 +146,9 @@ public class ArcVitalsOverlay extends Overlay {
         int cy = centreY();
         refreshGeometryCache(cx, cy);
 
-        hudBounds = null;
+        Map<String, Rectangle> frameBounds = new HashMap<>();
+
+        accum = null;
         drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus, dtMillis);
         drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus, dtMillis);
 
@@ -146,10 +158,24 @@ public class ArcVitalsOverlay extends Overlay {
         if (config.showPrayerIcons()) {
             drawPrayerIcons(g, cx, cy);
         }
+        if (accum != null) {
+            frameBounds.put("main", accum);
+        }
 
-        dragController.setBounds(hudBounds);
-        if (dragController.showOutline() && hudBounds != null) {
-            drawDragOutline(g, hudBounds);
+        List<DragTarget> targets = new ArrayList<>();
+        Rectangle main = frameBounds.get("main");
+        if (main != null) {
+            targets.add(new DragTarget("main", main, config.offsetX(), config.offsetY(),
+                MAIN_OFFSET_MIN, MAIN_OFFSET_MAX, "offsetX", "offsetY"));
+        }
+        dragController.setTargets(targets);
+
+        String outlined = dragController.outlinedId();
+        if (outlined != null) {
+            Rectangle b = frameBounds.get(outlined);
+            if (b != null) {
+                drawDragOutline(g, b);
+            }
         }
         return null;
     }
@@ -167,7 +193,7 @@ public class ArcVitalsOverlay extends Overlay {
         int anchorY = cy + config.size() / 2 + config.prayerIconOffset();
         PrayerIconLayout layout = PrayerIconLayout.of(spriteIds.size(), iconSize,
             config.prayerIconSpacing(), cx, anchorY, ICON_BG_PAD);
-        addBounds(new java.awt.Rectangle(layout.backgroundX(), layout.backgroundY(),
+        addBounds(new Rectangle(layout.backgroundX(), layout.backgroundY(),
             layout.backgroundWidth(), layout.backgroundHeight()));
 
         Composite oldComposite = g.getComposite();
@@ -329,7 +355,7 @@ public class ArcVitalsOverlay extends Overlay {
             vpW = client.getCanvasWidth();
             vpX = 0;
         }
-        int offset = dragController.isDragging() ? dragController.liveOffsetX() : config.offsetX();
+        int offset = dragController.isDragging("main") ? dragController.liveOffsetX() : config.offsetX();
         return vpX + vpW / 2 + offset;
     }
 
@@ -340,20 +366,20 @@ public class ArcVitalsOverlay extends Overlay {
             vpH = client.getCanvasHeight();
             vpY = 0;
         }
-        int offset = dragController.isDragging() ? dragController.liveOffsetY() : config.offsetY();
+        int offset = dragController.isDragging("main") ? dragController.liveOffsetY() : config.offsetY();
         return vpY + vpH / 2 + offset;
     }
 
-    // Grows the running HUD bounds by one drawn element. Rectangle.union returns a fresh rectangle,
-    // so the published snapshot is never mutated after the fact.
-    private void addBounds(java.awt.Rectangle r) {
-        hudBounds = (hudBounds == null) ? r : hudBounds.union(r);
+    // Grows the running accumulator by one drawn element. Rectangle.union returns a fresh rectangle,
+    // so a published snapshot is never mutated after the fact.
+    private void addBounds(Rectangle r) {
+        accum = (accum == null) ? r : accum.union(r);
     }
 
     // Faint outline plus a small move handle around the HUD, shown while Alt is held over it or while
     // it is being dragged. Traces the grabbable region (the published bounds grown by GRAB_PAD) and
     // draws at a fixed alpha so it stays visible regardless of the HUD's resting opacity.
-    private void drawDragOutline(Graphics2D g, java.awt.Rectangle b) {
+    private void drawDragOutline(Graphics2D g, Rectangle b) {
         int pad = HudDragController.GRAB_PAD;
         int x = b.x - pad;
         int y = b.y - pad;

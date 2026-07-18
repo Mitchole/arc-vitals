@@ -6,15 +6,11 @@ import javax.swing.SwingUtilities;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.input.MouseAdapter;
 
-// Drives the HUD's offsetX/offsetY from an Alt + left-drag. All grab state lives in the
-// HudDragController; this shell only translates mouse events, consumes them during a grab so the
-// game does not react, and writes the final offset to config once on release.
+// Drives the offset of whichever HUD unit is grabbed - the main group or a detached bar - from an
+// Alt + left-drag. All grab state and target selection live in the HudDragController; this shell only
+// translates mouse events, consumes them during a grab so the game does not react, and writes the
+// dragged target's final offset to its config keys once on release.
 public class ArcVitalsMouseListener extends MouseAdapter {
-
-    // Mirror the @Range on offsetX/offsetY in ArcVitalsConfig; kept in sync by hand because the
-    // annotation values cannot be read at runtime without reflection (banned in src/main).
-    private static final int OFFSET_MIN = -500;
-    private static final int OFFSET_MAX = 500;
 
     private final ArcVitalsConfig config;
     private final ConfigManager configManager;
@@ -30,7 +26,7 @@ public class ArcVitalsMouseListener extends MouseAdapter {
     @Override
     public MouseEvent mousePressed(MouseEvent e) {
         if (config.dragToMove() && e.isAltDown() && SwingUtilities.isLeftMouseButton(e)
-            && controller.begin(e.getX(), e.getY(), config.offsetX(), config.offsetY(), OFFSET_MIN, OFFSET_MAX)) {
+            && controller.begin(e.getX(), e.getY())) {
             e.consume();
         }
         return e;
@@ -39,7 +35,7 @@ public class ArcVitalsMouseListener extends MouseAdapter {
     @Override
     public MouseEvent mouseDragged(MouseEvent e) {
         if (controller.isDragging()) {
-            controller.update(e.getX(), e.getY(), OFFSET_MIN, OFFSET_MAX);
+            controller.update(e.getX(), e.getY());
             e.consume();
         }
         return e;
@@ -48,10 +44,10 @@ public class ArcVitalsMouseListener extends MouseAdapter {
     @Override
     public MouseEvent mouseReleased(MouseEvent e) {
         if (controller.isDragging()) {
-            // Commit the final offset while still dragging so the overlay never reads a stale
-            // config value in the frame between clearing the drag and the config write landing.
-            configManager.setConfiguration("arcvitals", "offsetX", controller.liveOffsetX());
-            configManager.setConfiguration("arcvitals", "offsetY", controller.liveOffsetY());
+            // Commit the dragged target's final offset while still dragging so the overlay never reads
+            // a stale config value in the frame between clearing the drag and the config write landing.
+            configManager.setConfiguration("arcvitals", controller.activeKeyX(), controller.liveOffsetX());
+            configManager.setConfiguration("arcvitals", controller.activeKeyY(), controller.liveOffsetY());
             controller.end();
             e.consume();
         }
@@ -60,8 +56,11 @@ public class ArcVitalsMouseListener extends MouseAdapter {
 
     @Override
     public MouseEvent mouseMoved(MouseEvent e) {
-        controller.setArmed(config.dragToMove() && e.isAltDown()
-            && controller.hitsBounds(e.getX(), e.getY()));
+        if (config.dragToMove() && e.isAltDown()) {
+            controller.updateArmed(e.getX(), e.getY());
+        } else {
+            controller.clearArmed();
+        }
         return e;
     }
 }
