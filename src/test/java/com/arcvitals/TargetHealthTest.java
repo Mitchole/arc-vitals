@@ -38,5 +38,9 @@ public class TargetHealthTest {
         assertEquals(100, TargetHealth.percent(30, 30));
         assertEquals(0, TargetHealth.percent(0, 30));
         assertEquals(50, TargetHealth.percent(15, 30));
+        // 2/3 = 66.67% rounds up to 67 (would be 66 if it truncated).
+        assertEquals(67, TargetHealth.percent(2, 3));
+        // 1/3 = 33.33% rounds down to 33.
+        assertEquals(33, TargetHealth.percent(1, 3));
     }
 }
