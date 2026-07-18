@@ -30,13 +30,16 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Appearance", description = "Colours and value text", position = 5)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 6)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 6)
+    String animationSection = "animation";
+
+    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 7)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 7)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 8)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 8, closedByDefault = true)
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 9, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -319,6 +322,25 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 6)
     default Color outlineColor() {
         return new Color(0, 0, 0, 180);
+    }
+
+    @ConfigItem(keyName = "smoothMotion", name = "Smooth bar motion", description = "Ease each bar to its new level instead of snapping. Drops glide slower than gains.", section = animationSection, position = 0)
+    default boolean smoothMotion() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "drainGlideMs", name = "Drain glide", description = "How long a bar takes to fall to a lower level.", section = animationSection, position = 1)
+    @Range(min = 50, max = 1000)
+    @Units(Units.MILLISECONDS)
+    default int drainGlideMs() {
+        return 350;
+    }
+
+    @ConfigItem(keyName = "restoreGlideMs", name = "Restore glide", description = "How long a bar takes to rise to a higher level.", section = animationSection, position = 2)
+    @Range(min = 50, max = 1000)
+    @Units(Units.MILLISECONDS)
+    default int restoreGlideMs() {
+        return 120;
     }
 
     @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = alertsSection, position = 0)
