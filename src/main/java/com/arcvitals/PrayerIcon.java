@@ -114,9 +114,11 @@ enum PrayerIcon {
         return client.isPrayerActive(prayer) && isEnabled(client);
     }
 
+    private static final PrayerIcon[] VALUES = values();
+
     static List<Integer> activeSpriteIds(Client client) {
         List<Integer> ids = new ArrayList<>();
-        for (PrayerIcon icon : values()) {
+        for (PrayerIcon icon : VALUES) {
             if (icon.isActive(client)) {
                 ids.add(icon.spriteId);
             }
