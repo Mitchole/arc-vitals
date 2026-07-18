@@ -33,19 +33,22 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Target bar", description = "A bar for your current combat target", position = 6)
     String targetBarSection = "targetBar";
 
-    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 7)
+    @ConfigSection(name = "Swing timer", description = "A bar for your attack cooldown", position = 7)
+    String swingSection = "swingTimer";
+
+    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 8)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 8)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 9)
     String animationSection = "animation";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 9)
+    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 10)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 10)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 11)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 11, closedByDefault = true)
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 12, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -451,6 +454,46 @@ public interface ArcVitalsConfig extends Config {
     @Units(Units.PIXELS)
     default int targetBarOffsetY() {
         return -220;
+    }
+
+    @ConfigItem(keyName = "swingEnabled", name = "Show swing timer", description = "Show a bar that fills over your attack cooldown.", section = swingSection, position = 0)
+    default boolean swingEnabled() {
+        return false;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "swingColor", name = "Swing timer colour", description = "Fill colour of the swing timer.", section = swingSection, position = 1)
+    default Color swingColor() {
+        return new Color(210, 235, 248);
+    }
+
+    @ConfigItem(keyName = "swingPlacement", name = "Placement", description = "Where the swing timer sits. Top and Bottom float above/below you and can be dragged with Alt; Nested tucks it into the group.", section = swingSection, position = 2)
+    default SwingPlacement swingPlacement() {
+        return SwingPlacement.TOP;
+    }
+
+    @ConfigItem(keyName = "swingSide", name = "Nesting side / bow", description = "Which side the swing timer nests on (Nested placement).", section = swingSection, position = 3)
+    default Side swingSide() {
+        return Side.LEFT;
+    }
+
+    @ConfigItem(keyName = "showSwingTicks", name = "Show tick marks", description = "Draw a notch at each attack tick along the bar.", section = swingSection, position = 4)
+    default boolean showSwingTicks() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "swingOffsetX", name = "Position X", description = "Horizontal position of the swing timer, measured from screen centre (Top/Bottom placement).", section = swingSection, position = 5)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int swingOffsetX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "swingOffsetY", name = "Position Y", description = "Vertical position of the swing timer, measured from screen centre (Top/Bottom placement).", section = swingSection, position = 6)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int swingOffsetY() {
+        return 0;
     }
 
     @Alpha

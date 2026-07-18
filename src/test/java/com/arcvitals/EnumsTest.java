@@ -2,6 +2,7 @@ package com.arcvitals;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class EnumsTest {
     @Test
@@ -19,5 +20,11 @@ public class EnumsTest {
         assertEquals("Leaf", BarShape.LEAF.toString());
         assertEquals("Horn", BarShape.HORN.toString());
         assertEquals("Ring", BarShape.RING.toString());
+    }
+
+    @Test
+    public void swingPlacementIsPublic() {
+        assertTrue("SwingPlacement must be public (config proxy)",
+            java.lang.reflect.Modifier.isPublic(SwingPlacement.class.getModifiers()));
     }
 }
