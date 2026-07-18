@@ -173,14 +173,19 @@ public class ArcVitalsOverlay extends Overlay {
         Map<String, Rectangle> frameBounds = new HashMap<>();
 
         accum = null;
-        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus, dtMillis);
-        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus, dtMillis);
+        int leftCount = drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus, dtMillis);
+        int rightCount = drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus, dtMillis);
 
         // Forget vitals not drawn this frame so they snap (not sweep) when next shown.
         displayed.keySet().retainAll(states.keySet());
 
         if (config.showPrayerIcons()) {
             drawPrayerIcons(g, cx, cy);
+        }
+        if (swingShowing && config.swingPlacement() == SwingPlacement.NESTED) {
+            boolean leftSide = config.swingSide() == Side.LEFT;
+            int index = leftSide ? leftCount : rightCount;
+            drawSwingNested(g, cx, cy, leftSide, index, dtMillis);
         }
         if (accum != null) {
             frameBounds.put("main", accum);
@@ -288,8 +293,9 @@ public class ArcVitalsOverlay extends Overlay {
         g.setComposite(oldComposite);
     }
 
-    private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
-                          boolean anyLow, int cx, int cy, StatsChanges hovered, HpStatus hpStatus, long dtMillis) {
+    // Returns the number of bars drawn on this side, so a NESTED swing timer can pick up at the next index.
+    private int drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
+                         boolean anyLow, int cx, int cy, StatsChanges hovered, HpStatus hpStatus, long dtMillis) {
         int index = 0;
         for (Vital v : VITALS) {
             BarState s = states.get(v);
@@ -300,6 +306,7 @@ public class ArcVitalsOverlay extends Overlay {
             drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus, dtMillis, true);
             index++;
         }
+        return index;
     }
 
     // Draws each detached, visible vital as a lone bar at index 0 around its own centre, recording its
@@ -454,6 +461,37 @@ public class ArcVitalsOverlay extends Overlay {
         if (accum != null) {
             frameBounds.put("swing", accum);
         }
+    }
+
+    // Draws the swing timer as an extra bar nested after the vitals on its side, sharing the main
+    // centre and the "main" drag (no separate DragTarget). Left/right orientation, its own index.
+    private void drawSwingNested(Graphics2D g, int cx, int cy, boolean leftSide, int index, long dtMillis) {
+        long now = System.nanoTime();
+        double target = swingTracker.fraction(now);
+        boolean ready = swingTracker.ready(now);
+        double shown = animatedSwingFraction(target, dtMillis);
+
+        Color fill = config.swingColor();
+        Color outline = config.showOutline() ? config.outlineColor() : null;
+
+        Composite oldComposite = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
+
+        Orientation orientation = leftSide ? Orientation.LEFT : Orientation.RIGHT;
+        Geometry geo = new ArcGeometry(cx, cy, config.size(), config.thickness(), config.gap(),
+            config.barSpacing(), config.curve(), index, orientation, config.flatEnds());
+        addBounds(geo.body().getBounds()); // folds into the "main" bounds accumulator for this frame
+        Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
+        BarRenderer.draw(g, geo, config.fillStyle(), FillDirection.BOTTOM_UP, shown, basePaint, fill,
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+
+        if (config.showSwingTicks()) {
+            drawSwingTicks(g, geo, swingTracker.cooldownTicks());
+        }
+        if (ready) {
+            drawSwingReadyGlow(g, geo);
+        }
+        g.setComposite(oldComposite);
     }
 
     // Eases the swing fill toward the real fraction; snaps on first sight or when smooth motion is off.

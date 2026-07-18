@@ -90,4 +90,19 @@ public class ArcVitalsOverlayTest {
         // Should draw the swing timer without throwing, even with vitals disabled.
         overlay.render(graphics);
     }
+
+    @Test
+    public void swingTimerNestedRendersWithoutError() {
+        when(config.swingEnabled()).thenReturn(true);
+        when(config.swingPlacement()).thenReturn(SwingPlacement.NESTED);
+        when(config.swingColor()).thenReturn(new java.awt.Color(210, 235, 248));
+        when(config.swingSide()).thenReturn(Side.LEFT);
+        when(config.showSwingTicks()).thenReturn(true);
+        when(swingTracker.showing(anyInt())).thenReturn(true);
+        when(swingTracker.fraction(anyLong())).thenReturn(0.3);
+        when(swingTracker.ready(anyLong())).thenReturn(false);
+        when(swingTracker.cooldownTicks()).thenReturn(5);
+
+        overlay.render(graphics);
+    }
 }
