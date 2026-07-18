@@ -29,12 +29,11 @@ public class CombatTracker {
             return Visibility.FULL;
         }
         int elapsed = currentTick - lastCombatTick;
-        // getTickCount() restarts lower after a world hop / login; a stale tick is not combat.
-        if (elapsed >= 0) {
-            int delayTicks = (int) Math.round(delaySeconds / 0.6);
-            if (elapsed <= delayTicks) {
-                return Visibility.FULL;
-            }
+        int delayTicks = (int) Math.round(delaySeconds / 0.6);
+        // getTickCount() restarts lower after a world hop / login, so a stale (negative) elapsed is
+        // not combat; the same guard keeps the recent-combat window closed until then.
+        if (elapsed >= 0 && elapsed <= delayTicks) {
+            return Visibility.FULL;
         }
         if (anyPrayerActive) {
             switch (prayerMode) {
