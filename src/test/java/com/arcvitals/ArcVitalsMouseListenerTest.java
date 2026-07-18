@@ -98,6 +98,7 @@ public class ArcVitalsMouseListenerTest {
         MouseEvent up = release(150, 140);
         listener.mouseReleased(up);
         verify(configManager, never()).setConfiguration(eq("arcvitals"), eq("offsetX"), anyInt());
+        verify(configManager, never()).setConfiguration(eq("arcvitals"), eq("offsetY"), anyInt());
         assertFalse(up.isConsumed());
     }
 

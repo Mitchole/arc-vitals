@@ -25,6 +25,13 @@ public class HudDragMathTest {
     }
 
     @Test
+    public void padBoundaryIsInclusive() {
+        // Right edge is x + w = 140; with pad 8 the inclusive limit is 148.
+        assertTrue(HudDragMath.hits(100, 100, 40, 60, 8, 148, 130));
+        assertFalse(HudDragMath.hits(100, 100, 40, 60, 8, 149, 130));
+    }
+
+    @Test
     public void zeroAreaBoundsNeverHit() {
         assertFalse(HudDragMath.hits(100, 100, 0, 0, 50, 100, 100));
     }

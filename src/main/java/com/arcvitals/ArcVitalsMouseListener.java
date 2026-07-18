@@ -48,9 +48,11 @@ public class ArcVitalsMouseListener extends MouseAdapter {
     @Override
     public MouseEvent mouseReleased(MouseEvent e) {
         if (controller.isDragging()) {
-            int[] fin = controller.end();
-            configManager.setConfiguration("arcvitals", "offsetX", fin[0]);
-            configManager.setConfiguration("arcvitals", "offsetY", fin[1]);
+            // Commit the final offset while still dragging so the overlay never reads a stale
+            // config value in the frame between clearing the drag and the config write landing.
+            configManager.setConfiguration("arcvitals", "offsetX", controller.liveOffsetX());
+            configManager.setConfiguration("arcvitals", "offsetY", controller.liveOffsetY());
+            controller.end();
             e.consume();
         }
         return e;
