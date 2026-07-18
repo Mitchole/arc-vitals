@@ -127,6 +127,10 @@ public interface ArcVitalsConfig extends Config {
         return true;
     }
 
+    // The four bar sections below (Hitpoints, Prayer, Special attack, Run energy) repeat the same ~10
+    // items each. This is not reducible: RuneLite builds config from a JDK proxy over this interface,
+    // so every setting needs its own distinctly-named default method with a literal keyName. A loop or
+    // shared helper cannot generate them, so the repetition stays.
     @ConfigItem(keyName = "hpEnabled", name = "Show Hitpoints", description = "Show the Hitpoints bar.", section = hpSection, position = 0)
     default boolean hpEnabled() {
         return true;

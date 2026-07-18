@@ -53,6 +53,8 @@ final class PrayerIconLayout {
         return y;
     }
 
+    // Kept only so the layout tests can assert icon centres without hard-coding the size they passed
+    // in; the overlay draws with its own iconSize local and never calls this. Left as-is: harmless.
     int iconSize() {
         return iconSize;
     }

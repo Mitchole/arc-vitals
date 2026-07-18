@@ -17,6 +17,8 @@ public class TargetTracker {
 
     // From InteractingChanged when the local player is the source. A non-null opponent becomes the
     // current target; a null opponent is ignored here (the linger clear runs on the game tick).
+    // This deliberately overlaps onGameTick's non-null branch: it exists only to pick up a new target
+    // mid-tick rather than waiting for the next GameTick, so it is kept despite the small redundancy.
     void onInteracting(Actor opponent, int tick) {
         if (opponent != null) {
             target = opponent;

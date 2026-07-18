@@ -36,7 +36,9 @@ final class BarRenderer {
             g.fill(geo.fillRegion(frac, prev, dir));
         }
 
-        // Outline: a border around the whole body perimeter, including the ends.
+        // Outline: a border around the whole body perimeter, including the ends. The BasicStroke is
+        // rebuilt each frame rather than cached: it is a handful of small objects per bar, far cheaper
+        // than the shape fills around it, so caching them would add state for no measurable gain.
         if (outlineColor != null && outlineWidth > 0) {
             g.setColor(outlineColor);
             g.setStroke(new BasicStroke(outlineWidth));

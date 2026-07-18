@@ -8,6 +8,11 @@ import net.runelite.api.Client;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.VarPlayerID;
 
+// One entry per tracked stat. Each carries its own read functions and config accessors as fields (a
+// function table), so drawing code never switches on which vital it holds -- adding a vital is one
+// constant, not a new case in a dozen switches. The DetachSpec key strings ("hpDetachX", ...) mirror
+// the @ConfigItem keyName values in ArcVitalsConfig by hand: the config proxy offers no way to derive
+// a key from a method reference, so VitalTest guards that the two stay in sync.
 enum Vital {
     HITPOINTS(
         c -> c.getBoostedSkillLevel(Skill.HITPOINTS),
