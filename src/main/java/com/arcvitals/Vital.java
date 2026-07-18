@@ -17,7 +17,9 @@ enum Vital {
         ArcVitalsConfig::hpShapeOverride, ArcVitalsConfig::hpFillOverride,
         ArcVitalsConfig::hpPatternOverride,
         ArcVitalsConfig::debugHpPercent,
-        "Hitpoints"),
+        "Hitpoints",
+        new DetachSpec(ArcVitalsConfig::hpDetached, ArcVitalsConfig::hpDetachX,
+            ArcVitalsConfig::hpDetachY, "hpDetachX", "hpDetachY")),
     PRAYER(
         c -> c.getBoostedSkillLevel(Skill.PRAYER),
         c -> c.getRealSkillLevel(Skill.PRAYER),
@@ -26,7 +28,9 @@ enum Vital {
         ArcVitalsConfig::prayerShapeOverride, ArcVitalsConfig::prayerFillOverride,
         ArcVitalsConfig::prayerPatternOverride,
         ArcVitalsConfig::debugPrayerPercent,
-        "Prayer"),
+        "Prayer",
+        new DetachSpec(ArcVitalsConfig::prayerDetached, ArcVitalsConfig::prayerDetachX,
+            ArcVitalsConfig::prayerDetachY, "prayerDetachX", "prayerDetachY")),
     SPECIAL_ATTACK(
         c -> c.getVarpValue(VarPlayerID.SA_ENERGY) / 10,
         c -> 100,
@@ -35,7 +39,9 @@ enum Vital {
         ArcVitalsConfig::specShapeOverride, ArcVitalsConfig::specFillOverride,
         ArcVitalsConfig::specPatternOverride,
         ArcVitalsConfig::debugSpecPercent,
-        null),
+        null,
+        new DetachSpec(ArcVitalsConfig::specDetached, ArcVitalsConfig::specDetachX,
+            ArcVitalsConfig::specDetachY, "specDetachX", "specDetachY")),
     RUN_ENERGY(
         c -> c.getEnergy() / 100,
         c -> 100,
@@ -44,7 +50,9 @@ enum Vital {
         ArcVitalsConfig::runShapeOverride, ArcVitalsConfig::runFillOverride,
         ArcVitalsConfig::runPatternOverride,
         ArcVitalsConfig::debugRunPercent,
-        "Run Energy");
+        "Run Energy",
+        new DetachSpec(ArcVitalsConfig::runDetached, ArcVitalsConfig::runDetachX,
+            ArcVitalsConfig::runDetachY, "runDetachX", "runDetachY"));
 
     private final ToIntFunction<Client> current;
     private final ToIntFunction<Client> max;
@@ -57,6 +65,7 @@ enum Vital {
     private final Function<ArcVitalsConfig, PatternOverride> patternOverride;
     private final ToIntFunction<ArcVitalsConfig> debugPercent;
     private final String restoreStatName;
+    private final DetachSpec detach;
 
     Vital(ToIntFunction<Client> current, ToIntFunction<Client> max,
           Predicate<ArcVitalsConfig> enabled, Function<ArcVitalsConfig, Color> color,
@@ -64,7 +73,7 @@ enum Vital {
           Function<ArcVitalsConfig, ShapeOverride> shapeOverride,
           Function<ArcVitalsConfig, FillStyleOverride> fillOverride,
           Function<ArcVitalsConfig, PatternOverride> patternOverride,
-          ToIntFunction<ArcVitalsConfig> debugPercent, String restoreStatName) {
+          ToIntFunction<ArcVitalsConfig> debugPercent, String restoreStatName, DetachSpec detach) {
         this.current = current;
         this.max = max;
         this.enabled = enabled;
@@ -76,6 +85,7 @@ enum Vital {
         this.patternOverride = patternOverride;
         this.debugPercent = debugPercent;
         this.restoreStatName = restoreStatName;
+        this.detach = detach;
     }
 
     int current(Client client) {
@@ -120,5 +130,25 @@ enum Vital {
 
     String restoreStatName() {
         return restoreStatName;
+    }
+
+    boolean detached(ArcVitalsConfig config) {
+        return detach.detached(config);
+    }
+
+    int detachX(ArcVitalsConfig config) {
+        return detach.x(config);
+    }
+
+    int detachY(ArcVitalsConfig config) {
+        return detach.y(config);
+    }
+
+    String detachKeyX() {
+        return detach.keyX();
+    }
+
+    String detachKeyY() {
+        return detach.keyY();
     }
 }

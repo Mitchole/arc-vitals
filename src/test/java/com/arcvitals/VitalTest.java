@@ -72,4 +72,28 @@ public class VitalTest {
         assertEquals(75, Vital.SPECIAL_ATTACK.debugPercent(config));
         assertEquals(90, Vital.RUN_ENERGY.debugPercent(config));
     }
+
+    @Test
+    public void detachAccessorsDelegateToTheMatchingGetter() {
+        ArcVitalsConfig config = mock(ArcVitalsConfig.class);
+        when(config.hpDetached()).thenReturn(true);
+        when(config.hpDetachX()).thenReturn(-40);
+        when(config.hpDetachY()).thenReturn(120);
+        when(config.runDetached()).thenReturn(false);
+
+        assertTrue(Vital.HITPOINTS.detached(config));
+        assertEquals(-40, Vital.HITPOINTS.detachX(config));
+        assertEquals(120, Vital.HITPOINTS.detachY(config));
+        assertFalse(Vital.RUN_ENERGY.detached(config));
+    }
+
+    @Test
+    public void detachKeysMatchTheConfigKeyNames() {
+        assertEquals("hpDetachX", Vital.HITPOINTS.detachKeyX());
+        assertEquals("hpDetachY", Vital.HITPOINTS.detachKeyY());
+        assertEquals("prayerDetachX", Vital.PRAYER.detachKeyX());
+        assertEquals("specDetachX", Vital.SPECIAL_ATTACK.detachKeyX());
+        assertEquals("runDetachX", Vital.RUN_ENERGY.detachKeyX());
+        assertEquals("runDetachY", Vital.RUN_ENERGY.detachKeyY());
+    }
 }

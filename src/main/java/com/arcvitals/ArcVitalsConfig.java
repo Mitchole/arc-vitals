@@ -179,6 +179,25 @@ public interface ArcVitalsConfig extends Config {
         return PatternOverride.INHERIT;
     }
 
+    @ConfigItem(keyName = "hpDetached", name = "Detach this bar", description = "Float the Hitpoints bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = hpSection, position = 10)
+    default boolean hpDetached() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "hpDetachX", name = "Detached X", description = "Horizontal position of the detached Hitpoints bar, measured from screen centre.", section = hpSection, position = 11)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int hpDetachX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "hpDetachY", name = "Detached Y", description = "Vertical position of the detached Hitpoints bar, measured from screen centre.", section = hpSection, position = 12)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int hpDetachY() {
+        return 0;
+    }
+
     @ConfigItem(keyName = "prayerEnabled", name = "Show Prayer", description = "Show the Prayer bar.", section = prayerSection, position = 0)
     default boolean prayerEnabled() {
         return true;
@@ -215,6 +234,25 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "prayerPatternOverride", name = "Prayer pattern", description = "Pattern for the Prayer bar. Inherit uses the global bar pattern.", section = prayerSection, position = 6)
     default PatternOverride prayerPatternOverride() {
         return PatternOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "prayerDetached", name = "Detach this bar", description = "Float the Prayer bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = prayerSection, position = 7)
+    default boolean prayerDetached() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "prayerDetachX", name = "Detached X", description = "Horizontal position of the detached Prayer bar, measured from screen centre.", section = prayerSection, position = 8)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int prayerDetachX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "prayerDetachY", name = "Detached Y", description = "Vertical position of the detached Prayer bar, measured from screen centre.", section = prayerSection, position = 9)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int prayerDetachY() {
+        return 0;
     }
 
     @ConfigItem(keyName = "specEnabled", name = "Show Special attack", description = "Show the Special attack bar.", section = specSection, position = 0)
@@ -255,6 +293,25 @@ public interface ArcVitalsConfig extends Config {
         return PatternOverride.INHERIT;
     }
 
+    @ConfigItem(keyName = "specDetached", name = "Detach this bar", description = "Float the Special attack bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = specSection, position = 7)
+    default boolean specDetached() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "specDetachX", name = "Detached X", description = "Horizontal position of the detached Special attack bar, measured from screen centre.", section = specSection, position = 8)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int specDetachX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "specDetachY", name = "Detached Y", description = "Vertical position of the detached Special attack bar, measured from screen centre.", section = specSection, position = 9)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int specDetachY() {
+        return 0;
+    }
+
     @ConfigItem(keyName = "runEnabled", name = "Show Run energy", description = "Show the Run energy bar.", section = runSection, position = 0)
     default boolean runEnabled() {
         return false;
@@ -291,6 +348,25 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "runPatternOverride", name = "Run energy pattern", description = "Pattern for the Run energy bar. Inherit uses the global bar pattern.", section = runSection, position = 6)
     default PatternOverride runPatternOverride() {
         return PatternOverride.INHERIT;
+    }
+
+    @ConfigItem(keyName = "runDetached", name = "Detach this bar", description = "Float the Run energy bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = runSection, position = 7)
+    default boolean runDetached() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "runDetachX", name = "Detached X", description = "Horizontal position of the detached Run energy bar, measured from screen centre.", section = runSection, position = 8)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int runDetachX() {
+        return 0;
+    }
+
+    @ConfigItem(keyName = "runDetachY", name = "Detached Y", description = "Vertical position of the detached Run energy bar, measured from screen centre.", section = runSection, position = 9)
+    @Range(min = -2000, max = 2000)
+    @Units(Units.PIXELS)
+    default int runDetachY() {
+        return 0;
     }
 
     @ConfigItem(keyName = "showPrayerIcons", name = "Show prayer icons", description = "Show icons for the prayers you currently have active, centred under the HUD.", section = prayerIconsSection, position = 0)
