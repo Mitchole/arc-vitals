@@ -35,6 +35,7 @@ public class ArcVitalsOverlay extends Overlay {
     private final ItemStatChangesService itemStatService;
     private final CombatTracker combatTracker;
     private final SpriteManager spriteManager;
+    private final HudDragController dragController;
 
     private static final Vital[] VITALS = Vital.values();
     private static final Prayer[] PRAYERS = Prayer.values();
@@ -63,15 +64,21 @@ public class ArcVitalsOverlay extends Overlay {
     private boolean cacheFlatEnds;
 
     private static final int ICON_BG_PAD = 3;
+    private static final Color DRAG_OUTLINE_COLOR = new Color(255, 150, 0);
+
+    // Union of everything drawn this frame, in canvas pixels. Reset at the top of the draw section,
+    // grown as each bar and the prayer-icon row are drawn, then published to the drag controller.
+    private java.awt.Rectangle hudBounds;
 
     @Inject
     ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
-                     CombatTracker combatTracker, SpriteManager spriteManager) {
+                     CombatTracker combatTracker, SpriteManager spriteManager, HudDragController dragController) {
         this.client = client;
         this.config = config;
         this.itemStatService = itemStatService;
         this.combatTracker = combatTracker;
         this.spriteManager = spriteManager;
+        this.dragController = dragController;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.UNDER_WIDGETS);
     }
@@ -79,6 +86,7 @@ public class ArcVitalsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D g) {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
+            dragController.setBounds(null);
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -86,6 +94,7 @@ public class ArcVitalsOverlay extends Overlay {
         boolean debug = config.debugEnabled();
         Visibility visibility = debug ? Visibility.FULL : resolveVisibility();
         if (visibility == Visibility.HIDDEN) {
+            dragController.setBounds(null);
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -109,6 +118,7 @@ public class ArcVitalsOverlay extends Overlay {
             }
         }
         if (states.isEmpty()) {
+            dragController.setBounds(null);
             displayed.clear();
             lastFrameNanos = 0L;
             return null;
@@ -126,6 +136,7 @@ public class ArcVitalsOverlay extends Overlay {
         int cy = centreY();
         refreshGeometryCache(cx, cy);
 
+        hudBounds = null;
         drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus, dtMillis);
         drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus, dtMillis);
 
@@ -134,6 +145,11 @@ public class ArcVitalsOverlay extends Overlay {
 
         if (config.showPrayerIcons()) {
             drawPrayerIcons(g, cx, cy);
+        }
+
+        dragController.setBounds(hudBounds);
+        if (dragController.showOutline() && hudBounds != null) {
+            drawDragOutline(g, hudBounds);
         }
         return null;
     }
@@ -151,6 +167,8 @@ public class ArcVitalsOverlay extends Overlay {
         int anchorY = cy + config.size() / 2 + config.prayerIconOffset();
         PrayerIconLayout layout = PrayerIconLayout.of(spriteIds.size(), iconSize,
             config.prayerIconSpacing(), cx, anchorY, ICON_BG_PAD);
+        addBounds(new java.awt.Rectangle(layout.backgroundX(), layout.backgroundY(),
+            layout.backgroundWidth(), layout.backgroundHeight()));
 
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
@@ -216,6 +234,7 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = geometryCache.computeIfAbsent(cacheKey,
             k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
+        addBounds(geo.body().getBounds());
         Paint basePaint = patternPaints.resolve(v.pattern(config), fill);
         double shown = animatedFraction(v, self.fraction, dtMillis);
         BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), shown, basePaint, fill,
@@ -310,7 +329,8 @@ public class ArcVitalsOverlay extends Overlay {
             vpW = client.getCanvasWidth();
             vpX = 0;
         }
-        return vpX + vpW / 2 + config.offsetX();
+        int offset = dragController.isDragging() ? dragController.liveOffsetX() : config.offsetX();
+        return vpX + vpW / 2 + offset;
     }
 
     private int centreY() {
@@ -320,7 +340,34 @@ public class ArcVitalsOverlay extends Overlay {
             vpH = client.getCanvasHeight();
             vpY = 0;
         }
-        return vpY + vpH / 2 + config.offsetY();
+        int offset = dragController.isDragging() ? dragController.liveOffsetY() : config.offsetY();
+        return vpY + vpH / 2 + offset;
+    }
+
+    // Grows the running HUD bounds by one drawn element. Rectangle.union returns a fresh rectangle,
+    // so the published snapshot is never mutated after the fact.
+    private void addBounds(java.awt.Rectangle r) {
+        hudBounds = (hudBounds == null) ? r : hudBounds.union(r);
+    }
+
+    // Faint outline plus a small move handle around the HUD, shown while Alt is held over it or while
+    // it is being dragged. Traces the grabbable region (the published bounds grown by GRAB_PAD) and
+    // draws at a fixed alpha so it stays visible regardless of the HUD's resting opacity.
+    private void drawDragOutline(Graphics2D g, java.awt.Rectangle b) {
+        int pad = HudDragController.GRAB_PAD;
+        int x = b.x - pad;
+        int y = b.y - pad;
+        int w = b.width + 2 * pad;
+        int h = b.height + 2 * pad;
+        Composite old = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.55f));
+        g.setColor(DRAG_OUTLINE_COLOR);
+        g.drawRoundRect(x, y, w, h, 8, 8);
+        int hx = x + w / 2;
+        int hy = y + 6;
+        g.drawLine(hx - 4, hy, hx + 4, hy);
+        g.drawLine(hx, hy - 4, hx, hy + 4);
+        g.setComposite(old);
     }
 
     // Clears the cached per-bar geometry whenever any input to it changes.

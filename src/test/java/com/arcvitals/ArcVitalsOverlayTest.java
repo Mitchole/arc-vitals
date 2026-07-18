@@ -17,7 +17,8 @@ public class ArcVitalsOverlayTest {
             mock(ArcVitalsConfig.class),
             mock(ItemStatChangesService.class),
             mock(CombatTracker.class),
-            mock(SpriteManager.class));
+            mock(SpriteManager.class),
+            mock(HudDragController.class));
     }
 
     @Test

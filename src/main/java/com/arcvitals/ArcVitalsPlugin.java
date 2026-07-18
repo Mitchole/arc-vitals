@@ -10,6 +10,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -36,6 +37,12 @@ public class ArcVitalsPlugin extends Plugin {
     @Inject
     private CombatTracker combatTracker;
 
+    @Inject
+    private MouseManager mouseManager;
+
+    @Inject
+    private ArcVitalsMouseListener mouseListener;
+
     @Provides
     ArcVitalsConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(ArcVitalsConfig.class);
@@ -44,11 +51,13 @@ public class ArcVitalsPlugin extends Plugin {
     @Override
     protected void startUp() {
         overlayManager.add(overlay);
+        mouseManager.registerMouseListener(mouseListener);
     }
 
     @Override
     protected void shutDown() {
         overlayManager.remove(overlay);
+        mouseManager.unregisterMouseListener(mouseListener);
     }
 
     @Subscribe
