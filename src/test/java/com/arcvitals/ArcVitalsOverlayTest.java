@@ -1,6 +1,7 @@
 package com.arcvitals;
 
 import net.runelite.api.Client;
+import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.itemstats.ItemStatChangesService;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -15,7 +16,8 @@ public class ArcVitalsOverlayTest {
             mock(Client.class),
             mock(ArcVitalsConfig.class),
             mock(ItemStatChangesService.class),
-            mock(CombatTracker.class));
+            mock(CombatTracker.class),
+            mock(SpriteManager.class));
     }
 
     @Test

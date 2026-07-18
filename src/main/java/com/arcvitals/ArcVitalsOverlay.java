@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.image.BufferedImage;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ import net.runelite.api.Prayer;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.itemstats.Effect;
 import net.runelite.client.plugins.itemstats.ItemStatChangesService;
 import net.runelite.client.plugins.itemstats.StatsChanges;
@@ -32,6 +34,7 @@ public class ArcVitalsOverlay extends Overlay {
     private final ArcVitalsConfig config;
     private final ItemStatChangesService itemStatService;
     private final CombatTracker combatTracker;
+    private final SpriteManager spriteManager;
 
     private static final Vital[] VITALS = Vital.values();
     private static final Prayer[] PRAYERS = Prayer.values();
@@ -42,6 +45,11 @@ public class ArcVitalsOverlay extends Overlay {
     // stale value when it reappears. lastFrameNanos = 0 means "no previous frame" -> no easing this frame.
     private final EnumMap<Vital, Double> displayed = new EnumMap<>(Vital.class);
     private long lastFrameNanos;
+
+    // Loaded prayer-tab sprites keyed by sprite id. A null value means "requested, still loading";
+    // populated on the client thread by the getSpriteAsync callback, read on the client thread in
+    // render, so no synchronisation is needed.
+    private final Map<Integer, BufferedImage> spriteCache = new HashMap<>();
 
     private final Map<Long, Geometry> geometryCache = new HashMap<>();
     private final PatternPaints patternPaints = new PatternPaints();
@@ -54,13 +62,16 @@ public class ArcVitalsOverlay extends Overlay {
     private int cacheCurve;
     private boolean cacheFlatEnds;
 
+    private static final int ICON_BG_PAD = 3;
+
     @Inject
     ArcVitalsOverlay(Client client, ArcVitalsConfig config, ItemStatChangesService itemStatService,
-                     CombatTracker combatTracker) {
+                     CombatTracker combatTracker, SpriteManager spriteManager) {
         this.client = client;
         this.config = config;
         this.itemStatService = itemStatService;
         this.combatTracker = combatTracker;
+        this.spriteManager = spriteManager;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.UNDER_WIDGETS);
     }
@@ -120,7 +131,48 @@ public class ArcVitalsOverlay extends Overlay {
 
         // Forget vitals not drawn this frame so they snap (not sweep) when next shown.
         displayed.keySet().retainAll(states.keySet());
+
+        if (config.showPrayerIcons()) {
+            drawPrayerIcons(g, cx, cy);
+        }
         return null;
+    }
+
+    // Draws a centred row of icons for the currently-active prayers at the bottom of the HUD. The row
+    // anchors to the arc bottom (cy + size/2) plus the offset slider, draws at the resting base opacity,
+    // and reserves a slot per active prayer so positions stay put while sprites stream in. Sprites load
+    // asynchronously; a slot whose sprite has not arrived yet is skipped and fills in on a later frame.
+    private void drawPrayerIcons(Graphics2D g, int cx, int cy) {
+        java.util.List<Integer> spriteIds = PrayerIcon.activeSpriteIds(client);
+        if (spriteIds.isEmpty()) {
+            return;
+        }
+        int iconSize = config.prayerIconSize();
+        int anchorY = cy + config.size() / 2 + config.prayerIconOffset();
+        PrayerIconLayout layout = PrayerIconLayout.of(spriteIds.size(), iconSize,
+            config.prayerIconSpacing(), cx, anchorY, ICON_BG_PAD);
+
+        Composite oldComposite = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
+
+        if (config.prayerIconBackground()) {
+            g.setColor(config.prayerIconBackgroundColor());
+            g.fillRoundRect(layout.backgroundX(), layout.backgroundY(),
+                layout.backgroundWidth(), layout.backgroundHeight(), 6, 6);
+        }
+
+        for (int i = 0; i < layout.count(); i++) {
+            int id = spriteIds.get(i);
+            BufferedImage img = spriteCache.get(id);
+            if (img != null) {
+                g.drawImage(img, layout.iconX(i), layout.y(), iconSize, iconSize, null);
+            } else if (!spriteCache.containsKey(id)) {
+                spriteCache.put(id, null);
+                spriteManager.getSpriteAsync(id, 0, sprite -> spriteCache.put(id, sprite));
+            }
+        }
+
+        g.setComposite(oldComposite);
     }
 
     private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
