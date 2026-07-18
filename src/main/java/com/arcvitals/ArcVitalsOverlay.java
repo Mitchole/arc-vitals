@@ -37,6 +37,12 @@ public class ArcVitalsOverlay extends Overlay {
     private static final Prayer[] PRAYERS = Prayer.values();
     private final EnumMap<Vital, BarState> states = new EnumMap<>(Vital.class);
 
+    // Per-vital displayed fill fraction, eased toward the real fraction each frame. Cleared whenever
+    // nothing is drawn (logged out, HUD hidden, no bars) so a bar snaps rather than sweeping from a
+    // stale value when it reappears. lastFrameNanos = 0 means "no previous frame" -> no easing this frame.
+    private final EnumMap<Vital, Double> displayed = new EnumMap<>(Vital.class);
+    private long lastFrameNanos;
+
     private final Map<Long, Geometry> geometryCache = new HashMap<>();
     private final PatternPaints patternPaints = new PatternPaints();
     private int cacheCx = Integer.MIN_VALUE;
@@ -62,11 +68,15 @@ public class ArcVitalsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D g) {
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
+            displayed.clear();
+            lastFrameNanos = 0L;
             return null;
         }
         boolean debug = config.debugEnabled();
         Visibility visibility = debug ? Visibility.FULL : resolveVisibility();
         if (visibility == Visibility.HIDDEN) {
+            displayed.clear();
+            lastFrameNanos = 0L;
             return null;
         }
 
@@ -88,8 +98,14 @@ public class ArcVitalsOverlay extends Overlay {
             }
         }
         if (states.isEmpty()) {
+            displayed.clear();
+            lastFrameNanos = 0L;
             return null;
         }
+
+        long now = System.nanoTime();
+        long dtMillis = lastFrameNanos == 0L ? 0L : Math.min(100L, (now - lastFrameNanos) / 1_000_000L);
+        lastFrameNanos = now;
 
         StatsChanges hovered = config.showRestorePreview() ? resolveHovered() : null;
 
@@ -99,13 +115,16 @@ public class ArcVitalsOverlay extends Overlay {
         int cy = centreY();
         refreshGeometryCache(cx, cy);
 
-        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus);
-        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus);
+        drawSide(g, states, Side.LEFT, true, anyLow, cx, cy, hovered, hpStatus, dtMillis);
+        drawSide(g, states, Side.RIGHT, false, anyLow, cx, cy, hovered, hpStatus, dtMillis);
+
+        // Forget vitals not drawn this frame so they snap (not sweep) when next shown.
+        displayed.keySet().retainAll(states.keySet());
         return null;
     }
 
     private void drawSide(Graphics2D g, EnumMap<Vital, BarState> states, Side side, boolean leftSide,
-                          boolean anyLow, int cx, int cy, StatsChanges hovered, HpStatus hpStatus) {
+                          boolean anyLow, int cx, int cy, StatsChanges hovered, HpStatus hpStatus, long dtMillis) {
         int index = 0;
         for (Vital v : VITALS) {
             BarState s = states.get(v);
@@ -113,13 +132,14 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
-            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus);
+            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus, dtMillis);
             index++;
         }
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,
-                           int gap, int cx, int cy, int index, StatsChanges hovered, HpStatus hpStatus) {
+                           int gap, int cx, int cy, int index, StatsChanges hovered, HpStatus hpStatus,
+                           long dtMillis) {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
@@ -145,7 +165,8 @@ public class ArcVitalsOverlay extends Overlay {
             k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
                 config.curve(), index, leftSide, config.flatEnds()));
         Paint basePaint = patternPaints.resolve(v.pattern(config), fill);
-        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), self.fraction, basePaint, fill,
+        double shown = animatedFraction(v, self.fraction, dtMillis);
+        BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), shown, basePaint, fill,
             config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
 
         String txt = ValueText.format(current, max, config.valueDisplay());
@@ -163,6 +184,22 @@ public class ArcVitalsOverlay extends Overlay {
         }
 
         g.setComposite(oldComposite);
+    }
+
+    // Eases the drawn fill fraction toward the real one. First sighting of a vital (or animation off)
+    // snaps; otherwise a drop uses drainGlideMs and a gain uses restoreGlideMs. Stores the result so
+    // the next frame continues from it.
+    private double animatedFraction(Vital v, double target, long dtMillis) {
+        Double prev = displayed.get(v);
+        double shown;
+        if (prev == null || !config.smoothMotion()) {
+            shown = target;
+        } else {
+            int glide = target < prev ? config.drainGlideMs() : config.restoreGlideMs();
+            shown = BarAnimator.step(prev, target, dtMillis, glide);
+        }
+        displayed.put(v, shown);
+        return shown;
     }
 
     // Resolves the item currently hovered in the inventory to its stat changes, or null when
