@@ -75,6 +75,11 @@ public class ArcVitalsOverlay extends Overlay {
     private static final int MAIN_OFFSET_MIN = -500;
     private static final int MAIN_OFFSET_MAX = 500;
 
+    // Detached bars reach further than the main HUD so they can sit at a screen edge or corner.
+    // Mirror the @Range on the per-bar detachX/detachY config items.
+    private static final int DETACH_OFFSET_MIN = -2000;
+    private static final int DETACH_OFFSET_MAX = 2000;
+
     // Running union of the geometry drawn for the current unit, in canvas pixels. Reset to null
     // before a unit is drawn, grown by addBounds as each bar and the prayer-icon row draw, then read
     // off into the per-frame bounds map.
@@ -162,11 +167,24 @@ public class ArcVitalsOverlay extends Overlay {
             frameBounds.put("main", accum);
         }
 
+        drawDetachedBars(g, anyLow, hovered, hpStatus, dtMillis, frameBounds);
+
         List<DragTarget> targets = new ArrayList<>();
         Rectangle main = frameBounds.get("main");
         if (main != null) {
             targets.add(new DragTarget("main", main, config.offsetX(), config.offsetY(),
                 MAIN_OFFSET_MIN, MAIN_OFFSET_MAX, "offsetX", "offsetY"));
+        }
+        for (Vital v : VITALS) {
+            if (!v.detached(config)) {
+                continue;
+            }
+            Rectangle b = frameBounds.get(v.name());
+            if (b == null) {
+                continue;
+            }
+            targets.add(new DragTarget(v.name(), b, v.detachX(config), v.detachY(config),
+                DETACH_OFFSET_MIN, DETACH_OFFSET_MAX, v.detachKeyX(), v.detachKeyY()));
         }
         dragController.setTargets(targets);
 
@@ -185,7 +203,7 @@ public class ArcVitalsOverlay extends Overlay {
     // and reserves a slot per active prayer so positions stay put while sprites stream in. Sprites load
     // asynchronously; a slot whose sprite has not arrived yet is skipped and fills in on a later frame.
     private void drawPrayerIcons(Graphics2D g, int cx, int cy) {
-        java.util.List<Integer> spriteIds = PrayerIcon.activeSpriteIds(client);
+        List<Integer> spriteIds = PrayerIcon.activeSpriteIds(client);
         if (spriteIds.isEmpty()) {
             return;
         }
@@ -224,18 +242,39 @@ public class ArcVitalsOverlay extends Overlay {
         int index = 0;
         for (Vital v : VITALS) {
             BarState s = states.get(v);
-            if (s == null || v.side(config) != side) {
+            if (s == null || v.side(config) != side || v.detached(config)) {
                 continue;
             }
             int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), index);
-            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus, dtMillis);
+            drawVital(g, v, s, leftSide, anyLow, gap, cx, cy, index, hovered, hpStatus, dtMillis, true);
             index++;
+        }
+    }
+
+    // Draws each detached, visible vital as a lone bar at index 0 around its own centre, recording its
+    // bounds under the vital's name so it can be published as its own drag target.
+    private void drawDetachedBars(Graphics2D g, boolean anyLow, StatsChanges hovered, HpStatus hpStatus,
+                                  long dtMillis, Map<String, Rectangle> frameBounds) {
+        for (Vital v : VITALS) {
+            BarState s = states.get(v);
+            if (s == null || !v.detached(config)) {
+                continue;
+            }
+            int dcx = detachCentreX(v);
+            int dcy = detachCentreY(v);
+            int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), 0);
+            boolean leftSide = v.side(config) == Side.LEFT;
+            accum = null;
+            drawVital(g, v, s, leftSide, anyLow, gap, dcx, dcy, 0, hovered, hpStatus, dtMillis, false);
+            if (accum != null) {
+                frameBounds.put(v.name(), accum);
+            }
         }
     }
 
     private void drawVital(Graphics2D g, Vital v, BarState self, boolean leftSide, boolean anyLow,
                            int gap, int cx, int cy, int index, StatsChanges hovered, HpStatus hpStatus,
-                           long dtMillis) {
+                           long dtMillis, boolean cached) {
         int current = self.current;
         int max = self.max;
         float alpha = BarState.opacity(self.low, anyLow, config.alertMode(), config.baseOpacity(), config.alertOpacity());
@@ -256,10 +295,18 @@ public class ArcVitalsOverlay extends Overlay {
 
         Color outline = config.showOutline() ? config.outlineColor() : null;
         BarShape shape = v.shape(config);
-        long cacheKey = ((long) shape.ordinal() << 8) | ((long) index << 1) | (leftSide ? 1 : 0);
-        Geometry geo = geometryCache.computeIfAbsent(cacheKey,
-            k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
-                config.curve(), index, leftSide, config.flatEnds()));
+        Geometry geo;
+        if (cached) {
+            long cacheKey = ((long) shape.ordinal() << 8) | ((long) index << 1) | (leftSide ? 1 : 0);
+            geo = geometryCache.computeIfAbsent(cacheKey,
+                k -> shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+                    config.curve(), index, leftSide, config.flatEnds()));
+        } else {
+            // Detached bars sit at their own centre; the single-centre cache cannot key them, so build
+            // fresh each frame. They are few and lone, so this is cheap.
+            geo = shape.build(cx, cy, config.size(), config.thickness(), config.gap(), config.barSpacing(),
+                config.curve(), index, leftSide, config.flatEnds());
+        }
         addBounds(geo.body().getBounds());
         Paint basePaint = patternPaints.resolve(v.pattern(config), fill);
         double shown = animatedFraction(v, self.fraction, dtMillis);
@@ -348,26 +395,46 @@ public class ArcVitalsOverlay extends Overlay {
         return new Color(r, g, b, 150);
     }
 
-    private int centreX() {
+    private int viewportCentreX() {
         int vpW = client.getViewportWidth();
         int vpX = client.getViewportXOffset();
         if (vpW <= 0) {
             vpW = client.getCanvasWidth();
             vpX = 0;
         }
-        int offset = dragController.isDragging("main") ? dragController.liveOffsetX() : config.offsetX();
-        return vpX + vpW / 2 + offset;
+        return vpX + vpW / 2;
     }
 
-    private int centreY() {
+    private int viewportCentreY() {
         int vpH = client.getViewportHeight();
         int vpY = client.getViewportYOffset();
         if (vpH <= 0) {
             vpH = client.getCanvasHeight();
             vpY = 0;
         }
+        return vpY + vpH / 2;
+    }
+
+    private int centreX() {
+        int offset = dragController.isDragging("main") ? dragController.liveOffsetX() : config.offsetX();
+        return viewportCentreX() + offset;
+    }
+
+    private int centreY() {
         int offset = dragController.isDragging("main") ? dragController.liveOffsetY() : config.offsetY();
-        return vpY + vpH / 2 + offset;
+        return viewportCentreY() + offset;
+    }
+
+    // Centre for a detached bar: viewport centre plus its own offset (or the live drag offset while
+    // this bar is the one being dragged).
+    private int detachCentreX(Vital v) {
+        int offset = dragController.isDragging(v.name()) ? dragController.liveOffsetX() : v.detachX(config);
+        return viewportCentreX() + offset;
+    }
+
+    private int detachCentreY(Vital v) {
+        int offset = dragController.isDragging(v.name()) ? dragController.liveOffsetY() : v.detachY(config);
+        return viewportCentreY() + offset;
     }
 
     // Grows the running accumulator by one drawn element. Rectangle.union returns a fresh rectangle,
