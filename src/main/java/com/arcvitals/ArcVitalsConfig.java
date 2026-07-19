@@ -12,46 +12,43 @@ import net.runelite.client.config.Units;
 @ConfigGroup("arcvitals")
 public interface ArcVitalsConfig extends Config {
 
-    @ConfigSection(name = "Layout", description = "Position, size and shape of the bars", position = 0)
+    @ConfigSection(name = "Position & size", description = "Where the HUD sits and how big the bars are.", position = 0)
     String layoutSection = "layout";
 
-    @ConfigSection(name = "Hitpoints bar", description = "Hitpoints bar", position = 1)
-    String hpSection = "hpBar";
-
-    @ConfigSection(name = "Prayer bar", description = "Prayer bar", position = 2)
-    String prayerSection = "prayerBar";
-
-    @ConfigSection(name = "Special attack bar", description = "Special attack bar", position = 3)
-    String specSection = "specBar";
-
-    @ConfigSection(name = "Run energy bar", description = "Run energy bar", position = 4)
-    String runSection = "runBar";
-
-    @ConfigSection(name = "Prayer icons", description = "Icons for the prayers you have active", position = 5)
-    String prayerIconsSection = "prayerIcons";
-
-    @ConfigSection(name = "Target bar", description = "A bar for your current combat target", position = 6)
-    String targetBarSection = "targetBar";
-
-    @ConfigSection(name = "Swing timer", description = "A bar for your attack cooldown", position = 7)
-    String swingSection = "swingTimer";
-
-    @ConfigSection(name = "Overheal", description = "Show hitpoints boosted past your real level", position = 8)
-    String overhealSection = "overheal";
-
-    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 9)
+    @ConfigSection(name = "Appearance", description = "Shape, fill, outline, colours and value text.", position = 1)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 10)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 2)
     String animationSection = "animation";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 11)
+    @ConfigSection(name = "Alerts", description = "Brightening and recolouring when a stat runs low.", position = 3)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 12)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 4)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 13, closedByDefault = true)
+    @ConfigSection(name = "Hitpoints bar", description = "Show, colour, threshold, poison and overheal for the Hitpoints bar.", position = 5)
+    String hpSection = "hpBar";
+
+    @ConfigSection(name = "Prayer bar", description = "Show, colour, threshold and style for the Prayer bar.", position = 6)
+    String prayerSection = "prayerBar";
+
+    @ConfigSection(name = "Special attack bar", description = "Show, colour, threshold and style for the Special attack bar.", position = 7)
+    String specSection = "specBar";
+
+    @ConfigSection(name = "Run energy bar", description = "Show, colour, threshold and style for the Run energy bar.", position = 8)
+    String runSection = "runBar";
+
+    @ConfigSection(name = "Prayer icons", description = "Icons for the prayers you have active", position = 9)
+    String prayerIconsSection = "prayerIcons";
+
+    @ConfigSection(name = "Target bar", description = "A bar for your current combat target", position = 10)
+    String targetBarSection = "targetBar";
+
+    @ConfigSection(name = "Swing timer", description = "A bar for your attack cooldown", position = 11)
+    String swingSection = "swingTimer";
+
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 12, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -96,39 +93,39 @@ public interface ArcVitalsConfig extends Config {
         return 7;
     }
 
-    @ConfigItem(keyName = "curve", name = "Curve", description = "How much each bar bows outward, in degrees.", section = layoutSection, position = 6)
+    @ConfigItem(keyName = "curve", name = "Curve", description = "How much each bar bows outward, in degrees. Curved shapes only (ignored by Straight and Ring).", section = appearanceSection, position = 1)
     @Range(min = 20, max = 180)
     default int curve() {
         return 120;
     }
 
-    @ConfigItem(keyName = "fillDirection", name = "Fill direction", description = "Which way each bar drains.", section = layoutSection, position = 7)
+    @ConfigItem(keyName = "fillDirection", name = "Fill direction", description = "Which way each bar drains.", section = appearanceSection, position = 2)
     default FillDirection fillDirection() {
         return FillDirection.BOTTOM_UP;
     }
 
-    @ConfigItem(keyName = "barShape", name = "Bar shape", description = "Overall shape of every bar.", section = layoutSection, position = 8)
+    @ConfigItem(keyName = "barShape", name = "Bar shape", description = "Overall shape of every bar.", section = appearanceSection, position = 0)
     default BarShape barShape() {
         return BarShape.ARC;
     }
 
-    @ConfigItem(keyName = "fillStyle", name = "Fill style", description = "How the filled part of each bar is painted.", section = layoutSection, position = 9)
+    @ConfigItem(keyName = "fillStyle", name = "Fill style", description = "How the filled part of each bar is painted.", section = appearanceSection, position = 3)
     default FillStyle fillStyle() {
         return FillStyle.SMOOTH;
     }
 
-    @ConfigItem(keyName = "segments", name = "Segments", description = "Number of pips for the Segmented fill style.", section = layoutSection, position = 10)
+    @ConfigItem(keyName = "segments", name = "Segments", description = "Number of pips for the Segmented fill style.", section = appearanceSection, position = 4)
     @Range(min = 4, max = 30)
     default int segments() {
         return 14;
     }
 
-    @ConfigItem(keyName = "barPattern", name = "Bar pattern", description = "Material texture painted under each bar's fill. Not shown under the Gradient fill style.", section = layoutSection, position = 11)
+    @ConfigItem(keyName = "barPattern", name = "Bar pattern", description = "Material texture painted under each bar's fill. Not shown under the Gradient fill style.", section = appearanceSection, position = 5)
     default BarPattern barPattern() {
         return BarPattern.NONE;
     }
 
-    @ConfigItem(keyName = "dragToMove", name = "Drag to move (hold Alt)", description = "Hold Alt and drag the HUD with the left mouse button to reposition it.", section = layoutSection, position = 12)
+    @ConfigItem(keyName = "dragToMove", name = "Drag to move (hold Alt)", description = "Hold Alt and drag the HUD with the left mouse button to reposition it.", section = layoutSection, position = 6)
     default boolean dragToMove() {
         return true;
     }
@@ -177,34 +174,34 @@ public interface ArcVitalsConfig extends Config {
         return new Color(0, 65, 0);
     }
 
-    @ConfigItem(keyName = "hpShapeOverride", name = "Hitpoints shape", description = "Shape for the Hitpoints bar. Inherit uses the global bar shape.", section = hpSection, position = 7)
+    @ConfigItem(keyName = "hpShapeOverride", name = "Hitpoints shape", description = "Shape for the Hitpoints bar. Inherit uses the global bar shape.", section = hpSection, position = 10)
     default ShapeOverride hpShapeOverride() {
         return ShapeOverride.INHERIT;
     }
 
-    @ConfigItem(keyName = "hpFillOverride", name = "Hitpoints fill style", description = "Fill style for the Hitpoints bar. Inherit uses the global fill style.", section = hpSection, position = 8)
+    @ConfigItem(keyName = "hpFillOverride", name = "Hitpoints fill style", description = "Fill style for the Hitpoints bar. Inherit uses the global fill style.", section = hpSection, position = 11)
     default FillStyleOverride hpFillOverride() {
         return FillStyleOverride.INHERIT;
     }
 
-    @ConfigItem(keyName = "hpPatternOverride", name = "Hitpoints pattern", description = "Pattern for the Hitpoints bar. Inherit uses the global bar pattern.", section = hpSection, position = 9)
+    @ConfigItem(keyName = "hpPatternOverride", name = "Hitpoints pattern", description = "Pattern for the Hitpoints bar. Inherit uses the global bar pattern.", section = hpSection, position = 12)
     default PatternOverride hpPatternOverride() {
         return PatternOverride.INHERIT;
     }
 
-    @ConfigItem(keyName = "hpDetached", name = "Detach this bar", description = "Float the Hitpoints bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = hpSection, position = 10)
+    @ConfigItem(keyName = "hpDetached", name = "Detach this bar", description = "Float the Hitpoints bar free of the central group so it can sit on its own. Move it with Alt and the left mouse button (when Drag to move is on), or with the positions below.", section = hpSection, position = 13)
     default boolean hpDetached() {
         return false;
     }
 
-    @ConfigItem(keyName = "hpDetachX", name = "Detached X", description = "Horizontal position of the detached Hitpoints bar, measured from screen centre.", section = hpSection, position = 11)
+    @ConfigItem(keyName = "hpDetachX", name = "Detached X", description = "Horizontal position of the detached Hitpoints bar, measured from screen centre. Used when Detach this bar is on.", section = hpSection, position = 14)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int hpDetachX() {
         return 0;
     }
 
-    @ConfigItem(keyName = "hpDetachY", name = "Detached Y", description = "Vertical position of the detached Hitpoints bar, measured from screen centre.", section = hpSection, position = 12)
+    @ConfigItem(keyName = "hpDetachY", name = "Detached Y", description = "Vertical position of the detached Hitpoints bar, measured from screen centre. Used when Detach this bar is on.", section = hpSection, position = 15)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int hpDetachY() {
@@ -254,14 +251,14 @@ public interface ArcVitalsConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "prayerDetachX", name = "Detached X", description = "Horizontal position of the detached Prayer bar, measured from screen centre.", section = prayerSection, position = 8)
+    @ConfigItem(keyName = "prayerDetachX", name = "Detached X", description = "Horizontal position of the detached Prayer bar, measured from screen centre. Used when Detach this bar is on.", section = prayerSection, position = 8)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int prayerDetachX() {
         return 0;
     }
 
-    @ConfigItem(keyName = "prayerDetachY", name = "Detached Y", description = "Vertical position of the detached Prayer bar, measured from screen centre.", section = prayerSection, position = 9)
+    @ConfigItem(keyName = "prayerDetachY", name = "Detached Y", description = "Vertical position of the detached Prayer bar, measured from screen centre. Used when Detach this bar is on.", section = prayerSection, position = 9)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int prayerDetachY() {
@@ -311,14 +308,14 @@ public interface ArcVitalsConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "specDetachX", name = "Detached X", description = "Horizontal position of the detached Special attack bar, measured from screen centre.", section = specSection, position = 8)
+    @ConfigItem(keyName = "specDetachX", name = "Detached X", description = "Horizontal position of the detached Special attack bar, measured from screen centre. Used when Detach this bar is on.", section = specSection, position = 8)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int specDetachX() {
         return 0;
     }
 
-    @ConfigItem(keyName = "specDetachY", name = "Detached Y", description = "Vertical position of the detached Special attack bar, measured from screen centre.", section = specSection, position = 9)
+    @ConfigItem(keyName = "specDetachY", name = "Detached Y", description = "Vertical position of the detached Special attack bar, measured from screen centre. Used when Detach this bar is on.", section = specSection, position = 9)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int specDetachY() {
@@ -368,14 +365,14 @@ public interface ArcVitalsConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "runDetachX", name = "Detached X", description = "Horizontal position of the detached Run energy bar, measured from screen centre.", section = runSection, position = 8)
+    @ConfigItem(keyName = "runDetachX", name = "Detached X", description = "Horizontal position of the detached Run energy bar, measured from screen centre. Used when Detach this bar is on.", section = runSection, position = 8)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int runDetachX() {
         return 0;
     }
 
-    @ConfigItem(keyName = "runDetachY", name = "Detached Y", description = "Vertical position of the detached Run energy bar, measured from screen centre.", section = runSection, position = 9)
+    @ConfigItem(keyName = "runDetachY", name = "Detached Y", description = "Vertical position of the detached Run energy bar, measured from screen centre. Used when Detach this bar is on.", section = runSection, position = 9)
     @Range(min = -2000, max = 2000)
     @Units(Units.PIXELS)
     default int runDetachY() {
@@ -499,49 +496,49 @@ public interface ArcVitalsConfig extends Config {
         return 0;
     }
 
-    @ConfigItem(keyName = "overhealEnabled", name = "Show overheal", description = "Show hitpoints boosted past your real level as a coloured band past a real-max tick.", section = overhealSection, position = 0)
+    @ConfigItem(keyName = "overhealEnabled", name = "Show overheal", description = "Show hitpoints boosted past your real level as a coloured band past a real-max tick.", section = hpSection, position = 7)
     default boolean overhealEnabled() {
         return false;
     }
 
     @Alpha
-    @ConfigItem(keyName = "overhealColor", name = "Overheal colour", description = "Colour of the over-max band.", section = overhealSection, position = 1)
+    @ConfigItem(keyName = "overhealColor", name = "Overheal colour", description = "Colour of the over-max band.", section = hpSection, position = 8)
     default Color overhealColor() {
         return new Color(120, 240, 255, 235);
     }
 
-    @ConfigItem(keyName = "showOverhealTick", name = "Show real-max tick", description = "Draw a tick where your real maximum sits.", section = overhealSection, position = 2)
+    @ConfigItem(keyName = "showOverhealTick", name = "Show real-max tick", description = "Draw a tick where your real maximum sits.", section = hpSection, position = 9)
     default boolean showOverhealTick() {
         return true;
     }
 
     @Alpha
-    @ConfigItem(keyName = "trackColor", name = "Track colour", description = "Colour of the empty part of each bar.", section = appearanceSection, position = 0)
+    @ConfigItem(keyName = "trackColor", name = "Track colour", description = "Colour of the empty part of each bar.", section = appearanceSection, position = 10)
     default Color trackColor() {
         return new Color(0, 0, 0, 130);
     }
 
-    @ConfigItem(keyName = "valueDisplay", name = "Value text", description = "What to show under each bar.", section = appearanceSection, position = 1)
+    @ConfigItem(keyName = "valueDisplay", name = "Value text", description = "What to show under each bar.", section = appearanceSection, position = 11)
     default ValueDisplay valueDisplay() {
         return ValueDisplay.CURRENT_MAX;
     }
 
-    @ConfigItem(keyName = "showRestorePreview", name = "Restore preview", description = "Show how much hovered food or potions would restore, as a lighter segment.", section = appearanceSection, position = 2)
+    @ConfigItem(keyName = "showRestorePreview", name = "Restore preview", description = "Show how much hovered food or potions would restore, as a lighter segment.", section = appearanceSection, position = 12)
     default boolean showRestorePreview() {
         return true;
     }
 
-    @ConfigItem(keyName = "flatEnds", name = "Flat bar ends", description = "Cut the bar ends flat (IceHUD style) instead of rounded.", section = appearanceSection, position = 3)
+    @ConfigItem(keyName = "flatEnds", name = "Flat bar ends", description = "Cut the bar ends flat (IceHUD style) instead of rounded.", section = appearanceSection, position = 6)
     default boolean flatEnds() {
         return true;
     }
 
-    @ConfigItem(keyName = "showOutline", name = "Bar outline", description = "Draw a border around each bar.", section = appearanceSection, position = 4)
+    @ConfigItem(keyName = "showOutline", name = "Bar outline", description = "Draw a border around each bar.", section = appearanceSection, position = 7)
     default boolean showOutline() {
         return true;
     }
 
-    @ConfigItem(keyName = "outlineWidth", name = "Outline width", description = "Thickness of the bar outline.", section = appearanceSection, position = 5)
+    @ConfigItem(keyName = "outlineWidth", name = "Outline width", description = "Thickness of the bar outline.", section = appearanceSection, position = 8)
     @Range(min = 1, max = 5)
     @Units(Units.PIXELS)
     default int outlineWidth() {
@@ -549,7 +546,7 @@ public interface ArcVitalsConfig extends Config {
     }
 
     @Alpha
-    @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 6)
+    @ConfigItem(keyName = "outlineColor", name = "Outline colour", description = "Colour of the bar outline.", section = appearanceSection, position = 9)
     default Color outlineColor() {
         return new Color(0, 0, 0, 180);
     }
@@ -573,32 +570,32 @@ public interface ArcVitalsConfig extends Config {
         return 120;
     }
 
-    @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = alertsSection, position = 0)
+    @ConfigItem(keyName = "baseOpacity", name = "Base opacity", description = "Resting opacity of the HUD.", section = appearanceSection, position = 13)
     @Range(min = 0, max = 100)
     @Units(Units.PERCENT)
     default int baseOpacity() {
         return 60;
     }
 
-    @ConfigItem(keyName = "alertMode", name = "Alert mode", description = "What brightens when a stat drops low.", section = alertsSection, position = 1)
+    @ConfigItem(keyName = "alertMode", name = "Alert mode", description = "What brightens when a stat drops low.", section = alertsSection, position = 0)
     default AlertMode alertMode() {
         return AlertMode.PER_BAR;
     }
 
-    @ConfigItem(keyName = "alertOpacity", name = "Alert opacity", description = "Opacity a bar ramps to when alerting.", section = alertsSection, position = 2)
+    @ConfigItem(keyName = "alertOpacity", name = "Alert opacity", description = "Opacity a bar ramps to when alerting.", section = alertsSection, position = 1)
     @Range(min = 0, max = 100)
     @Units(Units.PERCENT)
     default int alertOpacity() {
         return 100;
     }
 
-    @ConfigItem(keyName = "warnColorEnabled", name = "Warning colour", description = "Recolour a bar while it is alerting.", section = alertsSection, position = 3)
+    @ConfigItem(keyName = "warnColorEnabled", name = "Recolour when alerting", description = "Recolour a bar while it is alerting.", section = alertsSection, position = 2)
     default boolean warnColorEnabled() {
         return true;
     }
 
     @Alpha
-    @ConfigItem(keyName = "warnColor", name = "Warning colour value", description = "Colour used while a bar is alerting.", section = alertsSection, position = 4)
+    @ConfigItem(keyName = "warnColor", name = "Warning colour", description = "Colour used while a bar is alerting.", section = alertsSection, position = 3)
     default Color warnColor() {
         return new Color(255, 60, 60);
     }
