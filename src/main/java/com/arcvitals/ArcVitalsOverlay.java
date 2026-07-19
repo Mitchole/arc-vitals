@@ -370,7 +370,7 @@ public class ArcVitalsOverlay extends Overlay {
         Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
         double shown = animatedTargetFraction(fraction, dtMillis);
         BarRenderer.draw(g, geo, config.fillStyle(), config.fillDirection(), shown, basePaint, fill,
-            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null, 0.0, null, null);
 
         int gap = BarLayout.gapForIndex(config.gap(), config.thickness(), config.barSpacing(), 0);
         drawLabel(g, config.targetBarLabel().format(name, percent), shape, tcx, tcy, gap, 0, leftSide, fill);
@@ -487,7 +487,7 @@ public class ArcVitalsOverlay extends Overlay {
         Color outline = config.showOutline() ? config.outlineColor() : null;
         Paint basePaint = patternPaints.resolve(config.barPattern(), fill);
         BarRenderer.draw(g, geo, config.fillStyle(), FillDirection.BOTTOM_UP, shown, basePaint, fill,
-            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null);
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null, 0.0, null, null);
 
         if (config.showSwingTicks()) {
             drawSwingTicks(g, geo, swingTracker.cooldownTicks());
@@ -594,7 +594,8 @@ public class ArcVitalsOverlay extends Overlay {
         Paint basePaint = patternPaints.resolve(v.pattern(config), fill);
         double shown = animatedFraction(v, self.fraction, dtMillis);
         BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), shown, basePaint, fill,
-            config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor);
+            config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor,
+            0.0, null, null);
 
         drawLabel(g, ValueText.format(current, max, config.valueDisplay()), shape, cx, cy, gap, index, leftSide, fill);
 
