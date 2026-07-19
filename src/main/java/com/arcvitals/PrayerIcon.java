@@ -125,4 +125,15 @@ enum PrayerIcon {
         }
         return ids;
     }
+
+    // The first n prayer sprites in table order, clamped to [0, table size]. Used by the debug
+    // preview to draw a synthetic icon row without any prayers actually being active.
+    static List<Integer> firstSpriteIds(int n) {
+        List<Integer> ids = new ArrayList<>();
+        int count = Math.min(Math.max(n, 0), VALUES.length);
+        for (int i = 0; i < count; i++) {
+            ids.add(VALUES[i].spriteId);
+        }
+        return ids;
+    }
 }
