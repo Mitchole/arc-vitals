@@ -82,6 +82,10 @@ public class ArcVitalsOverlay extends Overlay {
     private static final int ICON_BG_PAD = 3;
     private static final Color DRAG_OUTLINE_COLOR = new Color(255, 150, 0);
 
+    // Cadence of the free-running swing-timer preview in debug (no real weapon speed to size it from).
+    // Drives both the loop fill and the tick pips so the preview stays self-consistent.
+    private static final int SWING_DEBUG_TICKS = 4;
+
     // Mirror the @Range on offsetX/offsetY in ArcVitalsConfig; the annotation values cannot be read
     // at runtime without reflection (banned in src/main).
     private static final int MAIN_OFFSET_MIN = -500;
@@ -518,9 +522,10 @@ public class ArcVitalsOverlay extends Overlay {
         double target;
         boolean ready;
         if (debug) {
-            long loopMs = (now / 1_000_000L) % (4L * 600L); // 4-tick loop
-            target = SwingState.fraction(loopMs, 4);
-            ready = loopMs >= 4L * 600L - 16L; // brief READY flash at the wrap
+            long period = SWING_DEBUG_TICKS * 600L;
+            long loopMs = (now / 1_000_000L) % period;
+            target = SwingState.fraction(loopMs, SWING_DEBUG_TICKS);
+            ready = loopMs >= period - 16L; // brief READY flash at the wrap
         } else {
             target = swingTracker.fraction(now);
             ready = swingTracker.ready(now);
@@ -534,7 +539,7 @@ public class ArcVitalsOverlay extends Overlay {
             config.segments(), config.trackColor(), outline, config.outlineWidth(), 0.0, null, 0.0, null, null);
 
         if (config.showSwingTicks()) {
-            drawSwingTicks(g, geo, swingTracker.cooldownTicks());
+            drawSwingTicks(g, geo, debug ? SWING_DEBUG_TICKS : swingTracker.cooldownTicks());
         }
         if (!ready && shown > 0.01) {
             drawSwingLeadingEdge(g, geo, shown);
