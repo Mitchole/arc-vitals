@@ -134,6 +134,7 @@ public class ArcVitalsOverlay extends Overlay {
 
         states.clear();
         boolean anyLow = false;
+        long nowMillis = System.nanoTime() / 1_000_000L;
         for (Vital v : VITALS) {
             if (!v.enabled(config)) {
                 continue;
@@ -142,7 +143,10 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int max = v.max(client);
-            int current = debug ? Math.round(max * v.debugPercent(config) / 100f) : v.current(client);
+            int pct = (debug && config.debugAnimate())
+                ? DebugAnimate.percent(nowMillis, v.ordinal())
+                : v.debugPercent(config);
+            int current = debug ? Math.round(max * pct / 100f) : v.current(client);
             BarState s = BarState.of(current, max, v.threshold(config));
             states.put(v, s);
             if (s.low) {
@@ -180,7 +184,7 @@ public class ArcVitalsOverlay extends Overlay {
         displayed.keySet().retainAll(states.keySet());
 
         if (config.showPrayerIcons()) {
-            drawPrayerIcons(g, cx, cy);
+            drawPrayerIcons(g, cx, cy, debug);
         }
         if (swingShowing && config.swingPlacement() == SwingPlacement.NESTED) {
             boolean leftSide = config.swingSide() == Side.LEFT;
@@ -253,13 +257,20 @@ public class ArcVitalsOverlay extends Overlay {
     // anchors to the arc bottom (cy + size/2) plus the offset slider, draws at the resting base opacity,
     // and reserves a slot per active prayer so positions stay put while sprites stream in. Sprites load
     // asynchronously; a slot whose sprite has not arrived yet is skipped and fills in on a later frame.
-    private void drawPrayerIcons(Graphics2D g, int cx, int cy) {
-        int tick = client.getTickCount();
-        if (tick != prayerSpriteTick) {
-            prayerSpriteIds = PrayerIcon.activeSpriteIds(client);
-            prayerSpriteTick = tick;
+    private void drawPrayerIcons(Graphics2D g, int cx, int cy, boolean debug) {
+        List<Integer> spriteIds;
+        if (debug) {
+            // Debug bypasses the tick cache: the preview count can change (slider drag) without a
+            // game tick advancing, so a cached list would go stale mid-adjustment.
+            spriteIds = PrayerIcon.firstSpriteIds(config.debugPrayerIcons());
+        } else {
+            int tick = client.getTickCount();
+            if (tick != prayerSpriteTick) {
+                prayerSpriteIds = PrayerIcon.activeSpriteIds(client);
+                prayerSpriteTick = tick;
+            }
+            spriteIds = prayerSpriteIds;
         }
-        List<Integer> spriteIds = prayerSpriteIds;
         if (spriteIds.isEmpty()) {
             return;
         }

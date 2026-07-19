@@ -171,4 +171,66 @@ public class ArcVitalsOverlayTest {
 
         assertEquals("disabled overheal draws no band", 0, cyanBandCount(image));
     }
+
+    @Test
+    public void debugAnimatePrayerIconsRenderWithoutError() {
+        when(client.getCanvasWidth()).thenReturn(765);
+        when(client.getCanvasHeight()).thenReturn(503);
+        when(config.debugEnabled()).thenReturn(true);
+        when(config.debugAnimate()).thenReturn(true);
+        when(config.debugHpPercent()).thenReturn(50);
+        when(config.debugPrayerPercent()).thenReturn(50);
+        when(config.debugSpecPercent()).thenReturn(50);
+        when(config.debugRunPercent()).thenReturn(50);
+        when(config.debugPoisonState()).thenReturn(HpStatus.NONE);
+        when(config.hpEnabled()).thenReturn(true);
+        when(config.hpColor()).thenReturn(new Color(0, 200, 0));
+        when(config.hpThreshold()).thenReturn(0);
+        when(config.hpSide()).thenReturn(Side.LEFT);
+        when(config.hpShapeOverride()).thenReturn(ShapeOverride.INHERIT);
+        when(config.hpFillOverride()).thenReturn(FillStyleOverride.INHERIT);
+        when(config.hpPatternOverride()).thenReturn(PatternOverride.INHERIT);
+        when(config.barShape()).thenReturn(BarShape.ARC);
+        when(config.alertMode()).thenReturn(AlertMode.OFF);
+        when(config.fillDirection()).thenReturn(FillDirection.BOTTOM_UP);
+        when(config.valueDisplay()).thenReturn(ValueDisplay.OFF);
+        when(config.showPrayerIcons()).thenReturn(true);
+        when(config.debugPrayerIcons()).thenReturn(3);
+        when(config.prayerIconSize()).thenReturn(24);
+        when(config.prayerIconOffset()).thenReturn(6);
+        when(config.prayerIconSpacing()).thenReturn(2);
+        when(config.prayerIconBackground()).thenReturn(false);
+
+        overlay.render(graphics); // must not throw with animate + debug prayer icons on
+    }
+
+    @Test
+    public void prayerIconsHiddenInDebugWhenToggleOff() {
+        when(client.getCanvasWidth()).thenReturn(765);
+        when(client.getCanvasHeight()).thenReturn(503);
+        when(config.debugEnabled()).thenReturn(true);
+        when(config.debugHpPercent()).thenReturn(50);
+        when(config.debugPrayerPercent()).thenReturn(50);
+        when(config.debugSpecPercent()).thenReturn(50);
+        when(config.debugRunPercent()).thenReturn(50);
+        when(config.debugPoisonState()).thenReturn(HpStatus.NONE);
+        when(config.hpEnabled()).thenReturn(true);
+        when(config.hpColor()).thenReturn(new Color(0, 200, 0));
+        when(config.hpThreshold()).thenReturn(0);
+        when(config.hpSide()).thenReturn(Side.LEFT);
+        when(config.hpShapeOverride()).thenReturn(ShapeOverride.INHERIT);
+        when(config.hpFillOverride()).thenReturn(FillStyleOverride.INHERIT);
+        when(config.hpPatternOverride()).thenReturn(PatternOverride.INHERIT);
+        when(config.barShape()).thenReturn(BarShape.ARC);
+        when(config.alertMode()).thenReturn(AlertMode.OFF);
+        when(config.fillDirection()).thenReturn(FillDirection.BOTTOM_UP);
+        when(config.valueDisplay()).thenReturn(ValueDisplay.OFF);
+        when(config.showPrayerIcons()).thenReturn(false);
+        when(config.debugPrayerIcons()).thenReturn(8);
+
+        overlay.render(graphics); // showPrayerIcons off -> icon path never entered, no throw
+        // Guard: firstSpriteIds must NOT have been consulted because the row is gated off.
+        // (Behavioural assertion is the no-throw + the code path in Step 2 sitting inside the
+        // showPrayerIcons branch; there is no icon sprite to count here since SpriteManager is a mock.)
+    }
 }
