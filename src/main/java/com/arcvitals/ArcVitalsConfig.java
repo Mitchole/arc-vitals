@@ -622,8 +622,8 @@ public interface ArcVitalsConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "debugHpPercent", name = "Hitpoints %", description = "Previewed Hitpoints, as a percent of maximum.", section = debugSection, position = 1)
-    @Range(min = 0, max = 100)
+    @ConfigItem(keyName = "debugHpPercent", name = "Hitpoints %", description = "Previewed Hitpoints, as a percent of maximum. Above 100 previews overheal (needs Show overheal).", section = debugSection, position = 1)
+    @Range(min = 0, max = 150)
     @Units(Units.PERCENT)
     default int debugHpPercent() {
         return 50;
@@ -653,5 +653,23 @@ public interface ArcVitalsConfig extends Config {
     @ConfigItem(keyName = "debugPoisonState", name = "Poison state", description = "Previewed poison state for the Hitpoints bar. The low-stat warning colour still takes priority.", section = debugSection, position = 5)
     default HpStatus debugPoisonState() {
         return HpStatus.NONE;
+    }
+
+    @ConfigItem(keyName = "debugPrayerIcons", name = "Prayer icon count", description = "Number of synthetic prayer icons to preview (needs Show prayer icons).", section = debugSection, position = 6)
+    @Range(min = 0, max = 10)
+    default int debugPrayerIcons() {
+        return 3;
+    }
+
+    @ConfigItem(keyName = "debugTargetPercent", name = "Target HP %", description = "Fill of the synthetic target bar preview (needs Show target bar).", section = debugSection, position = 7)
+    @Range(min = 0, max = 100)
+    @Units(Units.PERCENT)
+    default int debugTargetPercent() {
+        return 60;
+    }
+
+    @ConfigItem(keyName = "debugAnimate", name = "Animate", description = "Auto-sweep the preview bar values so the drain and restore glides show without dragging.", section = debugSection, position = 8)
+    default boolean debugAnimate() {
+        return false;
     }
 }
