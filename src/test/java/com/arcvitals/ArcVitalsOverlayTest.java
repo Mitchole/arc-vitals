@@ -205,7 +205,35 @@ public class ArcVitalsOverlayTest {
     }
 
     @Test
+    public void debugPrayerIconChipDrawsWhenEnabled() {
+        stubDebugBase();
+        stubPrayerIconChip();
+        when(config.showPrayerIcons()).thenReturn(true);
+        when(config.debugPrayerIcons()).thenReturn(3);
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics());
+
+        assertTrue("debug prayer-icon row should draw its background chip", magentaCount(img) > 0);
+    }
+
+    @Test
     public void prayerIconsHiddenInDebugWhenToggleOff() {
+        stubDebugBase();
+        stubPrayerIconChip();
+        when(config.showPrayerIcons()).thenReturn(false);
+        when(config.debugPrayerIcons()).thenReturn(8);
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics());
+
+        // Show prayer icons is off, so the debug icon row (and its chip) must not draw at all.
+        assertEquals("Show prayer icons off -> no debug icon row", 0, magentaCount(img));
+    }
+
+    // debugEnabled with one enabled HP vital and neutral appearance, so a debug render draws. Per-element
+    // preview stubs (prayer icons / target / swing) are layered on by each test.
+    private void stubDebugBase() {
         when(client.getCanvasWidth()).thenReturn(765);
         when(client.getCanvasHeight()).thenReturn(503);
         when(config.debugEnabled()).thenReturn(true);
@@ -225,12 +253,32 @@ public class ArcVitalsOverlayTest {
         when(config.alertMode()).thenReturn(AlertMode.OFF);
         when(config.fillDirection()).thenReturn(FillDirection.BOTTOM_UP);
         when(config.valueDisplay()).thenReturn(ValueDisplay.OFF);
-        when(config.showPrayerIcons()).thenReturn(false);
-        when(config.debugPrayerIcons()).thenReturn(8);
+    }
 
-        overlay.render(graphics); // showPrayerIcons off -> icon path never entered, no throw
-        // Guard: firstSpriteIds must NOT have been consulted because the row is gated off.
-        // (Behavioural assertion is the no-throw + the code path in Step 2 sitting inside the
-        // showPrayerIcons branch; there is no icon sprite to count here since SpriteManager is a mock.)
+    // A distinctive magenta prayer-icon background chip whose pixels can be counted; the chip draws via
+    // fillRoundRect regardless of the (mock) SpriteManager, unlike the icon sprites themselves.
+    private void stubPrayerIconChip() {
+        when(config.prayerIconSize()).thenReturn(24);
+        when(config.prayerIconOffset()).thenReturn(6);
+        when(config.prayerIconSpacing()).thenReturn(2);
+        when(config.prayerIconBackground()).thenReturn(true);
+        when(config.prayerIconBackgroundColor()).thenReturn(new Color(255, 0, 255));
+    }
+
+    private static int magentaCount(BufferedImage img) {
+        int n = 0;
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int argb = img.getRGB(x, y);
+                int a = (argb >>> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+                if (a > 40 && r > 150 && g < 90 && b > 150) {
+                    n++;
+                }
+            }
+        }
+        return n;
     }
 }

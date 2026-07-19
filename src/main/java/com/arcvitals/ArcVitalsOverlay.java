@@ -134,7 +134,6 @@ public class ArcVitalsOverlay extends Overlay {
 
         states.clear();
         boolean anyLow = false;
-        long nowMillis = System.nanoTime() / 1_000_000L;
         for (Vital v : VITALS) {
             if (!v.enabled(config)) {
                 continue;
@@ -143,10 +142,15 @@ public class ArcVitalsOverlay extends Overlay {
                 continue;
             }
             int max = v.max(client);
-            int pct = (debug && config.debugAnimate())
-                ? DebugAnimate.percent(nowMillis, v.ordinal())
-                : v.debugPercent(config);
-            int current = debug ? Math.round(max * pct / 100f) : v.current(client);
+            int current;
+            if (debug) {
+                int pct = config.debugAnimate()
+                    ? DebugAnimate.percent(System.nanoTime() / 1_000_000L, v.ordinal())
+                    : v.debugPercent(config);
+                current = Math.round(max * pct / 100f);
+            } else {
+                current = v.current(client);
+            }
             BarState s = BarState.of(current, max, v.threshold(config));
             states.put(v, s);
             if (s.low) {
