@@ -281,4 +281,103 @@ public class ArcVitalsOverlayTest {
         }
         return n;
     }
+
+    // Target-red pixel count, mirroring magentaCount/cyanBandCount: counts pixels close to the target
+    // bar's fill colour so a synthetic debug preview can be proven to have painted (or not).
+    private static int redCount(BufferedImage img) {
+        int n = 0;
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int argb = img.getRGB(x, y);
+                int a = (argb >>> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+                if (a > 40 && r > 150 && g < 90 && b < 90) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
+    @Test
+    public void debugTargetBarRendersWhenEnabled() {
+        stubDebugBase();
+        when(config.targetBarEnabled()).thenReturn(true);
+        when(config.targetBarColor()).thenReturn(new Color(200, 40, 40));
+        when(config.targetBarLabel()).thenReturn(TargetLabel.PERCENT_ONLY);
+        when(config.targetBarSide()).thenReturn(Side.RIGHT);
+        when(config.targetBarShapeOverride()).thenReturn(ShapeOverride.INHERIT);
+        when(config.targetBarOffsetX()).thenReturn(0);
+        when(config.targetBarOffsetY()).thenReturn(0);
+        when(config.debugTargetPercent()).thenReturn(60);
+        when(targetTracker.current()).thenReturn(null); // no real target
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics());
+        assertTrue("synthetic target bar should paint", redCount(img) > 0);
+    }
+
+    @Test
+    public void debugTargetBarHiddenWhenToggleOff() {
+        stubDebugBase();
+        when(config.targetBarEnabled()).thenReturn(false);
+        when(config.debugTargetPercent()).thenReturn(60);
+        when(targetTracker.current()).thenReturn(null);
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics());
+        assertEquals("no target bar when Show target bar is off", 0, redCount(img));
+    }
+
+    @Test
+    public void debugSwingTimerRendersWhenEnabled() {
+        stubDebugBase();
+        when(config.swingEnabled()).thenReturn(true);
+        when(config.swingColor()).thenReturn(new Color(210, 235, 248));
+        when(config.swingPlacement()).thenReturn(SwingPlacement.TOP);
+        when(config.swingSide()).thenReturn(Side.LEFT);
+        when(config.showSwingTicks()).thenReturn(true);
+        when(config.swingOffsetX()).thenReturn(0);
+        when(config.swingOffsetY()).thenReturn(0);
+        when(swingTracker.showing(anyInt())).thenReturn(false); // no real swing
+        when(swingTracker.cooldownTicks()).thenReturn(4);
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics()); // must draw the looping swing without a real swing
+    }
+
+    @Test
+    public void debugSwingTimerHiddenWhenToggleOff() {
+        stubDebugBase();
+        when(config.swingEnabled()).thenReturn(false);
+        when(swingTracker.showing(anyInt())).thenReturn(false);
+
+        BufferedImage img = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(img.createGraphics());
+        // Show swing timer is off: swingShowing is false regardless of debug, so drawSwingTimer /
+        // drawSwingNested (and the synthetic loop) never run at all -- deterministic, unlike the
+        // "renders" case above whose fill depends on wall-clock timing.
+        assertEquals("no swing arc when Show swing timer is off", 0, swingColorCount(img));
+    }
+
+    // Swing-colour pixel count for the light blue-white swing fill (210, 235, 248), distinct from the
+    // green HP bar, magenta prayer chip, and red target bar used elsewhere in this test class.
+    private static int swingColorCount(BufferedImage img) {
+        int n = 0;
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int argb = img.getRGB(x, y);
+                int a = (argb >>> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+                if (a > 40 && r > 180 && g > 200 && b > 220) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
 }

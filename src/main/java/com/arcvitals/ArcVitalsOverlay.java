@@ -158,9 +158,12 @@ public class ArcVitalsOverlay extends Overlay {
             }
         }
         Actor targetActor = config.targetBarEnabled() ? targetTracker.current() : null;
-        boolean targetBarShowing = targetActor != null && targetActor.getName() != null
-            && TargetHealth.visible(targetActor.getHealthScale());
-        boolean swingShowing = config.swingEnabled() && swingTracker.showing(client.getTickCount());
+        // Debug preview: a synthetic target bar when the feature is on but there is no real target to
+        // show one for. Still gated on targetBarEnabled so the toggle stays authoritative in debug too.
+        boolean debugTarget = debug && config.targetBarEnabled() && targetActor == null;
+        boolean targetBarShowing = debugTarget || (targetActor != null && targetActor.getName() != null
+            && TargetHealth.visible(targetActor.getHealthScale()));
+        boolean swingShowing = config.swingEnabled() && (swingTracker.showing(client.getTickCount()) || debug);
 
         if (states.isEmpty() && !targetBarShowing && !swingShowing) {
             return clearAndReturn();
@@ -193,16 +196,16 @@ public class ArcVitalsOverlay extends Overlay {
         if (swingShowing && config.swingPlacement() == SwingPlacement.NESTED) {
             boolean leftSide = config.swingSide() == Side.LEFT;
             int index = leftSide ? leftCount : rightCount;
-            drawSwingNested(g, cx, cy, leftSide, index, dtMillis);
+            drawSwingNested(g, cx, cy, leftSide, index, dtMillis, debug);
         }
         if (accum != null) {
             frameBounds.put("main", accum);
         }
 
         drawDetachedBars(g, anyLow, hovered, hpStatus, dtMillis, frameBounds);
-        drawTargetBar(g, targetActor, dtMillis, frameBounds);
+        drawTargetBar(g, targetActor, debugTarget, dtMillis, frameBounds);
         if (swingShowing) {
-            drawSwingTimer(g, dtMillis, frameBounds);
+            drawSwingTimer(g, dtMillis, frameBounds, debug);
         }
 
         List<DragTarget> targets = new ArrayList<>();
@@ -348,25 +351,40 @@ public class ArcVitalsOverlay extends Overlay {
     // Draws the current combat target's HP as a lone bar at its own centre (uncached, index 0),
     // recording its bounds under "target" so it becomes an Alt-draggable DragTarget. Reuses the shared
     // geometry, pattern, fill, and label primitives; it has no alert/warn/poison/restore behaviour and
-    // draws at the resting base opacity. Bails (and snaps next time) when there is no valid target.
-    private void drawTargetBar(Graphics2D g, Actor targetActor, long dtMillis, Map<String, Rectangle> frameBounds) {
+    // draws at the resting base opacity. Bails (and snaps next time) when there is no valid target and
+    // no debug preview to fall back to. debugTarget draws a synthetic bar from debugTargetPercent when
+    // Show target bar is on but there is no real target; it has no actor to track, so it skips the
+    // actor reads and is treated as stable (no snap-on-actor-change).
+    private void drawTargetBar(Graphics2D g, Actor targetActor, boolean debugTarget, long dtMillis,
+                               Map<String, Rectangle> frameBounds) {
         int scale = targetActor == null ? 0 : targetActor.getHealthScale();
         String rawName = targetActor == null ? null : targetActor.getName();
-        if (targetActor == null || rawName == null || !TargetHealth.visible(scale)) {
+        boolean realTarget = targetActor != null && rawName != null && TargetHealth.visible(scale);
+        if (!realTarget && !debugTarget) {
             lastTargetActor = null;
             displayedTargetFraction = null;
             return;
         }
-        int ratio = targetActor.getHealthRatio();
-        double fraction = TargetHealth.fraction(ratio, scale);
-        int percent = TargetHealth.percent(ratio, scale);
-        String name = Text.removeTags(rawName);
 
-        // Snap (do not glide) when the target changes.
-        if (targetActor != lastTargetActor) {
-            displayedTargetFraction = null;
+        double fraction;
+        int percent;
+        String name;
+        if (realTarget) {
+            int ratio = targetActor.getHealthRatio();
+            fraction = TargetHealth.fraction(ratio, scale);
+            percent = TargetHealth.percent(ratio, scale);
+            name = Text.removeTags(rawName);
+
+            // Snap (do not glide) when the target changes.
+            if (targetActor != lastTargetActor) {
+                displayedTargetFraction = null;
+            }
+            lastTargetActor = targetActor;
+        } else {
+            fraction = config.debugTargetPercent() / 100.0;
+            percent = config.debugTargetPercent();
+            name = "Target";
         }
-        lastTargetActor = targetActor;
 
         int tcx = targetCentreX();
         int tcy = targetCentreY();
@@ -437,7 +455,7 @@ public class ArcVitalsOverlay extends Overlay {
     // Draws the attack-cooldown timer as a lone horizontal arc at its own centre (TOP/BOTTOM), or lets
     // drawSwingNested handle the NESTED case. The fill eases toward the tracker's fraction; pips mark
     // each tick; a soft glow shows when ready. Records bounds under "swing" for the Alt-drag.
-    private void drawSwingTimer(Graphics2D g, long dtMillis, Map<String, Rectangle> frameBounds) {
+    private void drawSwingTimer(Graphics2D g, long dtMillis, Map<String, Rectangle> frameBounds, boolean debug) {
         SwingPlacement placement = config.swingPlacement();
         if (placement == SwingPlacement.NESTED) {
             return; // handled inside the main-group flow (Task 9)
@@ -453,7 +471,7 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = new ArcGeometry(scx, scy, config.size(), config.thickness(), config.gap(),
             config.barSpacing(), config.curve(), 0, orientation, config.flatEnds());
         addBounds(geo.body().getBounds());
-        drawSwingArc(g, geo, dtMillis);
+        drawSwingArc(g, geo, dtMillis, debug);
 
         g.setComposite(oldComposite);
         if (accum != null) {
@@ -463,7 +481,8 @@ public class ArcVitalsOverlay extends Overlay {
 
     // Draws the swing timer as an extra bar nested after the vitals on its side, sharing the main
     // centre and the "main" drag (no separate DragTarget). Left/right orientation, its own index.
-    private void drawSwingNested(Graphics2D g, int cx, int cy, boolean leftSide, int index, long dtMillis) {
+    private void drawSwingNested(Graphics2D g, int cx, int cy, boolean leftSide, int index, long dtMillis,
+                                 boolean debug) {
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clamp01(config.baseOpacity() / 100f)));
 
@@ -471,7 +490,7 @@ public class ArcVitalsOverlay extends Overlay {
         Geometry geo = new ArcGeometry(cx, cy, config.size(), config.thickness(), config.gap(),
             config.barSpacing(), config.curve(), index, orientation, config.flatEnds());
         addBounds(geo.body().getBounds()); // folds into the "main" bounds accumulator for this frame
-        drawSwingArc(g, geo, dtMillis);
+        drawSwingArc(g, geo, dtMillis, debug);
 
         g.setComposite(oldComposite);
     }
@@ -492,10 +511,20 @@ public class ArcVitalsOverlay extends Overlay {
 
     // Draws the fill, per-tick pips, the bright leading edge at the current fill front, and the ready
     // glow. Callers own the composite, centre, and bounds; this only paints into the given geometry.
-    private void drawSwingArc(Graphics2D g, Geometry geo, long dtMillis) {
+    // In debug (no real swing to preview), the fill sources from a free-running 4-tick loop instead of
+    // the tracker, so the timer is visible without combat.
+    private void drawSwingArc(Graphics2D g, Geometry geo, long dtMillis, boolean debug) {
         long now = System.nanoTime();
-        double target = swingTracker.fraction(now);
-        boolean ready = swingTracker.ready(now);
+        double target;
+        boolean ready;
+        if (debug) {
+            long loopMs = (now / 1_000_000L) % (4L * 600L); // 4-tick loop
+            target = SwingState.fraction(loopMs, 4);
+            ready = loopMs >= 4L * 600L - 16L; // brief READY flash at the wrap
+        } else {
+            target = swingTracker.fraction(now);
+            ready = swingTracker.ready(now);
+        }
         double shown = animatedSwingFraction(target, dtMillis);
 
         Color fill = config.swingColor();
