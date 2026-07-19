@@ -45,7 +45,7 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Target bar", description = "A bar for your current combat target", position = 10)
     String targetBarSection = "targetBar";
 
-    @ConfigSection(name = "Swing timer", description = "A bar for your attack cooldown", position = 11)
+    @ConfigSection(name = "Swing Timer (EXPERIMENTAL)", description = "A bar for your attack cooldown", position = 11)
     String swingSection = "swingTimer";
 
     @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 12, closedByDefault = true)
