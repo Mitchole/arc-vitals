@@ -36,19 +36,22 @@ public interface ArcVitalsConfig extends Config {
     @ConfigSection(name = "Swing timer", description = "A bar for your attack cooldown", position = 7)
     String swingSection = "swingTimer";
 
-    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 8)
+    @ConfigSection(name = "Overheal", description = "Show hitpoints boosted past your real level", position = 8)
+    String overhealSection = "overheal";
+
+    @ConfigSection(name = "Appearance", description = "Colours and value text", position = 9)
     String appearanceSection = "appearance";
 
-    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 9)
+    @ConfigSection(name = "Animation", description = "Smooth motion when a bar changes level", position = 10)
     String animationSection = "animation";
 
-    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 10)
+    @ConfigSection(name = "Alerts", description = "Opacity and low-stat alerts", position = 11)
     String alertsSection = "alerts";
 
-    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 11)
+    @ConfigSection(name = "Visibility", description = "When the HUD is shown", position = 12)
     String visibilitySection = "visibility";
 
-    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 12, closedByDefault = true)
+    @ConfigSection(name = "Debug", description = "Preview the bars in chosen states", position = 13, closedByDefault = true)
     String debugSection = "debug";
 
     @ConfigItem(keyName = "offsetX", name = "Horizontal offset", description = "Move the whole HUD left or right from screen centre.", section = layoutSection, position = 0)
@@ -494,6 +497,22 @@ public interface ArcVitalsConfig extends Config {
     @Units(Units.PIXELS)
     default int swingOffsetY() {
         return 0;
+    }
+
+    @ConfigItem(keyName = "overhealEnabled", name = "Show overheal", description = "Show hitpoints boosted past your real level as a coloured band past a real-max tick.", section = overhealSection, position = 0)
+    default boolean overhealEnabled() {
+        return false;
+    }
+
+    @Alpha
+    @ConfigItem(keyName = "overhealColor", name = "Overheal colour", description = "Colour of the over-max band.", section = overhealSection, position = 1)
+    default Color overhealColor() {
+        return new Color(120, 240, 255, 235);
+    }
+
+    @ConfigItem(keyName = "showOverhealTick", name = "Show real-max tick", description = "Draw a tick where your real maximum sits.", section = overhealSection, position = 2)
+    default boolean showOverhealTick() {
+        return true;
     }
 
     @Alpha
