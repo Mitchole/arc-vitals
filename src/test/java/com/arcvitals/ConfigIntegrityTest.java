@@ -29,6 +29,10 @@ public class ConfigIntegrityTest {
                 positions.add(s.position());
             }
         }
+        // Non-vacuity guard: reflection must actually find the sections, else the checks below pass
+        // over nothing. The floor is well under the real count so a legitimate reshuffle never trips it.
+        assertTrue("expected the config's @ConfigSection fields; reflection found " + positions.size(),
+            positions.size() >= 10);
         assertContiguousFromZero("sections", positions);
     }
 
@@ -41,6 +45,8 @@ public class ConfigIntegrityTest {
                 assertTrue("duplicate keyName: " + it.keyName(), seen.add(it.keyName()));
             }
         }
+        // Non-vacuity guard: reflection must actually find the items (see section note above).
+        assertTrue("expected many @ConfigItem methods; reflection found " + seen.size(), seen.size() >= 50);
     }
 
     @Test
@@ -53,7 +59,10 @@ public class ConfigIntegrityTest {
         }
         for (Method m : ArcVitalsConfig.class.getMethods()) {
             ConfigItem it = m.getAnnotation(ConfigItem.class);
-            if (it != null && !it.section().isEmpty()) {
+            if (it != null) {
+                // Every item must belong to a section, and that section must be declared. Requiring a
+                // non-empty section here also catches an item that loses its section= during a reshuffle.
+                assertTrue("item " + it.keyName() + " has no section", !it.section().isEmpty());
                 assertTrue("item " + it.keyName() + " references undeclared section '" + it.section() + "'",
                     declared.contains(it.section()));
             }
