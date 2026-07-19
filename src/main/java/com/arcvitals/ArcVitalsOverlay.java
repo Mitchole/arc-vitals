@@ -576,6 +576,11 @@ public class ArcVitalsOverlay extends Overlay {
         double previewFraction = (restore > 0) ? BarState.previewFraction(current, max, restore) : 0.0;
         Color previewColor = (restore > 0) ? lighten(fill) : null;
 
+        double overBand = config.overhealEnabled() ? OverhealState.overBand(current, max) : 0.0;
+        Color overColor = overBand > 0 ? config.overhealColor() : null;
+        Color overTick = (overBand > 0 && config.showOverhealTick())
+            ? OverhealState.tickColor(config.overhealColor()) : null;
+
         Color outline = config.showOutline() ? config.outlineColor() : null;
         BarShape shape = v.shape(config);
         Geometry geo;
@@ -595,7 +600,7 @@ public class ArcVitalsOverlay extends Overlay {
         double shown = animatedFraction(v, self.fraction, dtMillis);
         BarRenderer.draw(g, geo, v.fillStyle(config), config.fillDirection(), shown, basePaint, fill,
             config.segments(), config.trackColor(), outline, config.outlineWidth(), previewFraction, previewColor,
-            0.0, null, null);
+            overBand, overColor, overTick);
 
         drawLabel(g, ValueText.format(current, max, config.valueDisplay()), shape, cx, cy, gap, index, leftSide, fill);
 

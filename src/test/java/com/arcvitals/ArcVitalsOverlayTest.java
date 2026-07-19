@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
+import net.runelite.api.Skill;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.itemstats.ItemStatChangesService;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -13,6 +14,7 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -104,5 +106,69 @@ public class ArcVitalsOverlayTest {
         when(swingTracker.cooldownTicks()).thenReturn(5);
 
         overlay.render(graphics);
+    }
+
+    // Stubs everything drawVital reads on the hitpoints path, boosted to 117 / 99, so a full render()
+    // actually draws the HP bar. Overheal on/off is left to each test.
+    private void stubBoostedHp() {
+        when(client.getCanvasWidth()).thenReturn(765);
+        when(client.getCanvasHeight()).thenReturn(503);
+        when(client.getVarpValue(anyInt())).thenReturn(0);
+        when(client.getRealSkillLevel(Skill.HITPOINTS)).thenReturn(99);
+        when(client.getBoostedSkillLevel(Skill.HITPOINTS)).thenReturn(117);
+
+        when(config.hpEnabled()).thenReturn(true);
+        when(config.hpColor()).thenReturn(new Color(0, 200, 0));
+        when(config.hpThreshold()).thenReturn(0);
+        when(config.hpSide()).thenReturn(Side.LEFT);
+        when(config.hpShapeOverride()).thenReturn(ShapeOverride.INHERIT);
+        when(config.hpFillOverride()).thenReturn(FillStyleOverride.INHERIT);
+        when(config.hpPatternOverride()).thenReturn(PatternOverride.INHERIT);
+        when(config.barShape()).thenReturn(BarShape.ARC);
+        when(config.alertMode()).thenReturn(AlertMode.OFF);
+        when(config.alertOpacity()).thenReturn(100);
+        when(config.fillDirection()).thenReturn(FillDirection.BOTTOM_UP);
+        when(config.valueDisplay()).thenReturn(ValueDisplay.OFF);
+    }
+
+    private static int cyanBandCount(BufferedImage img) {
+        int n = 0;
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int argb = img.getRGB(x, y);
+                int a = (argb >>> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int gr = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+                if (a > 120 && gr > 150 && b > 150 && r < 160) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
+    @Test
+    public void overhealBandRendersForBoostedHp() {
+        stubBoostedHp();
+        when(config.overhealEnabled()).thenReturn(true);
+        when(config.overhealColor()).thenReturn(new Color(120, 240, 255, 235));
+        when(config.showOverhealTick()).thenReturn(true);
+
+        BufferedImage image = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(image.createGraphics());
+
+        assertTrue("boosted HP should draw an overheal band", cyanBandCount(image) > 0);
+    }
+
+    @Test
+    public void noOverhealBandWhenDisabled() {
+        stubBoostedHp();
+        when(config.overhealEnabled()).thenReturn(false);
+
+        BufferedImage image = new BufferedImage(765, 503, BufferedImage.TYPE_INT_ARGB);
+        overlay.render(image.createGraphics());
+
+        assertEquals("disabled overheal draws no band", 0, cyanBandCount(image));
     }
 }
